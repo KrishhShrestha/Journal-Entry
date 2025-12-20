@@ -1,0 +1,58 @@
+﻿@page "/journals"
+@using Journal_Entry.Models
+@inject Journal_Entry.Services.DatabaseService DB
+@inject NavigationManager Nav
+
+<div class="container mt-4">
+    <h3 class="mb-3">All Journal Entries</h3>
+
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Title</th>
+                <th>Mood</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Entries)
+            {
+                <tr>
+                    <td>@entry.EntryDate.ToShortDateString()</td>
+                    <td>@entry.Title</td>
+                    <td>@entry.PrimaryMood</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary"
+                                @onclick="() => OpenEntry(entry.Id)">
+                            View
+                        </button>
+                        <button class="btn btn-sm btn-primary"
+                                @onclick="() => DeleteEntry(entry.Id)">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    List<JournalEntry> Entries = new();
+
+    protected override void OnInitialized()
+    {
+        Entries = DB.GetAllEntries();
+    }
+
+    void OpenEntry(int id)
+    {
+        Nav.NavigateTo($"/journal/{id}");
+    }
+    void DeleteEntry(int id)
+    {
+        DB.DeleteEntry(id);
+        Entries = DB.GetAllEntries();
+	}
+}

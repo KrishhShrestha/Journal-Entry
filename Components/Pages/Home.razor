@@ -1,0 +1,66 @@
+﻿@page "/"
+@inject Journal_Entry.ViewModels.JournalViewModel VM
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Today's Journal</h3>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <input placeholder="Title" @bind="VM.Title" class="form-control form-control-lg" />
+            </div>
+
+            <div class="mb-3">
+                <textarea placeholder="Write your journal..." @bind="VM.Content" rows="6" class="form-control form-control-lg"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <select @bind="VM.PrimaryMood" class="form-select form-select-lg">
+                    <option value="">Select Mood</option>
+                    @foreach (var mood in VM.MoodList)
+                    {
+                        <option value="@mood">@mood</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <input placeholder="Tags (comma separated)" @bind="VM.Tags" class="form-control form-control-lg" />
+            </div>
+
+            <button class="btn btn-success btn-lg w-100" @onclick="Save">
+                <i class="bi bi-save"></i> Save Entry
+            </button>
+        </div>
+    </div>
+
+    @if (VM.TodayEntry != null)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Saved Entry</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Title:</strong> @VM.TodayEntry.Title</p>
+                <p><strong>Content:</strong> @VM.TodayEntry.Content</p>
+                <p><strong>Mood:</strong> @VM.TodayEntry.PrimaryMood</p>
+                <p><strong>Tags:</strong> @VM.TodayEntry.Tags</p>
+                <p><em>Last Updated: @VM.TodayEntry.UpdatedAt</em></p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    void Save()
+    {
+        VM.SaveEntry();
+
+        // Clear input fields after saving
+        VM.Title = string.Empty;
+        VM.Content = string.Empty;
+        VM.PrimaryMood = string.Empty;
+        VM.Tags = string.Empty;
+    }
+}
