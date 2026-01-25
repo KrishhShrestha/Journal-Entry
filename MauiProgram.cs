@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Journal_Entry.Services;
-using Journal_Entry.ViewModels; 
+using Journal_Entry.ViewModels;
+using Syncfusion.Licensing;
+using Syncfusion.Blazor;
+
+
 
 namespace Journal_Entry
 {
@@ -10,6 +14,9 @@ namespace Journal_Entry
         {
             var builder = MauiApp.CreateBuilder();
 
+
+            SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1JGaF5cX2FCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWX5cdXVVRWhYUEJ+W0tWYEs=");
+
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
@@ -18,15 +25,20 @@ namespace Journal_Entry
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddSyncfusionBlazor();
+            builder.Services.AddSingleton<SecurityService>();
 
-            // ✅ DATABASE SERVICE REGISTRATION
+
+
+
+            //DATABASE SERVICE REGISTRATION
             string dbPath = Path.Combine(
                 FileSystem.AppDataDirectory, "journal.db");
 
             builder.Services.AddSingleton(
                 new DatabaseService(dbPath));
 
-            // ✅ VIEWMODEL REGISTRATION
+            //  VIEWMODEL REGISTRATION
             builder.Services.AddTransient<JournalViewModel>();
 
 #if DEBUG

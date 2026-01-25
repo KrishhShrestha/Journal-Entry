@@ -1,0 +1,35 @@
+﻿@page "/setup"
+@using Journal_Entry.Services
+@inject SecurityService Security
+@inject NavigationManager Nav
+
+<h3>🔐 Setup Security</h3>
+
+<input placeholder="Username"
+       @bind="username"
+       class="form-control mb-2" />
+
+<input type="password"
+       maxlength="4"
+       placeholder="Create PIN"
+       @bind="pin"
+       class="form-control mb-2" />
+
+<button class="btn btn-success" @onclick="Save">
+    Save & Continue
+</button>
+
+@code {
+    private string username = "";
+    private string pin = "";
+
+    private async Task Save()
+    {
+        if (pin.Length != 4) return;
+
+        Security.SaveUsername(username);
+        await Security.SavePinAsync(pin);
+
+        Nav.NavigateTo("/journal");
+    }
+}

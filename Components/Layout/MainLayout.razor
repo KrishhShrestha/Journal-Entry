@@ -1,15 +1,31 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@using Journal_Entry.Services
+@inject SecurityService Security
 
-<div class="d-flex vh-100">
 
-    <!-- Sidebar -->
-    <aside class="sidebar bg-dark text-white p-3">
-        <NavMenu />
-    </aside>
+<div class="page">
+    <NavMenu />
 
-    <!-- Main Content -->
-    <main class="flex-fill p-4 bg-light">
+    <main>
         @Body
     </main>
-
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var isPinSet = await Security.IsPinSetAsync();
+        var currentUri = Nav.ToBaseRelativePath(Nav.Uri);
+
+        if (isPinSet && !currentUri.StartsWith("lock"))
+        {
+            Nav.NavigateTo("/lock", true);
+        }
+
+        if (!isPinSet && !currentUri.StartsWith("setup"))
+        {
+            Nav.NavigateTo("/setup", true);
+        }
+    }
+}

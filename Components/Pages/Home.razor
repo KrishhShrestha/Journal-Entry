@@ -1,66 +1,99 @@
 ﻿@page "/"
-@inject Journal_Entry.ViewModels.JournalViewModel VM
+@inject Journal_Entry.Services.DatabaseService DB
+@inject NavigationManager Nav
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Today's Journal</h3>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <input placeholder="Title" @bind="VM.Title" class="form-control form-control-lg" />
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-br from-purple-600 to-purple-900 rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden">
+        <!-- Decorative Circle -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">Your Personal Journal</h1>
+                <p class="text-lg text-white/90">Capture your thoughts, track your moods, and reflect on your journey</p>
             </div>
-
-            <div class="mb-3">
-                <textarea placeholder="Write your journal..." @bind="VM.Content" rows="6" class="form-control form-control-lg"></textarea>
-            </div>
-
-            <div class="mb-3">
-                <select @bind="VM.PrimaryMood" class="form-select form-select-lg">
-                    <option value="">Select Mood</option>
-                    @foreach (var mood in VM.MoodList)
-                    {
-                        <option value="@mood">@mood</option>
-                    }
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <input placeholder="Tags (comma separated)" @bind="VM.Tags" class="form-control form-control-lg" />
-            </div>
-
-            <button class="btn btn-success btn-lg w-100" @onclick="Save">
-                <i class="bi bi-save"></i> Save Entry
+            <button class="bg-white text-purple-600 px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300" @onclick="GoToTodayJournal">
+                <i class="bi bi-pencil-square"></i> Start Writing
             </button>
         </div>
     </div>
 
-    @if (VM.TodayEntry != null)
+    <!-- Recent Journals Section -->
+    <div class="mb-8">
+        <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-8 pl-4 border-l-4 border-purple-600">Recent Entries</h3>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @if (RecentEntries.Any())
+        {
+            foreach (var entry in RecentEntries)
+            {
+                <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col">
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h5 class="text-xl font-semibold text-gray-800 mb-3">@entry.Title</h5>
+                        <p class="text-gray-600 leading-relaxed mb-6 line-clamp-3 flex-1">@entry.Content</p>
+
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                                @entry.PrimaryMood
+                            </span>
+                            <span class="text-gray-400 text-sm font-medium">
+                                @entry.EntryDate.ToShortDateString()
+                            </span>
+                        </div>
+
+                        <button class="w-full bg-gradient-to-r from-purple-600 to-purple-800 text-white py-3 rounded-xl font-medium hover:scale-105 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2" @onclick="() => ViewMoreEntry(entry.Id)">
+                            View Entry <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-span-full py-16 text-center">
+                <i class="bi bi-journal-text text-8xl text-gray-300 block mb-6"></i>
+                <h5 class="text-xl text-gray-600 font-medium">No journal entries yet</h5>
+                <p class="text-gray-400 mt-2">Start your journaling journey today!</p>
+            </div>
+        }
+    </div>
+
+    <!-- View All Journals Button -->
+    @if (RecentEntries.Count > 0)
     {
-        <div class="card shadow-sm mt-4">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Saved Entry</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Title:</strong> @VM.TodayEntry.Title</p>
-                <p><strong>Content:</strong> @VM.TodayEntry.Content</p>
-                <p><strong>Mood:</strong> @VM.TodayEntry.PrimaryMood</p>
-                <p><strong>Tags:</strong> @VM.TodayEntry.Tags</p>
-                <p><em>Last Updated: @VM.TodayEntry.UpdatedAt</em></p>
-            </div>
+        <div class="mt-12 text-center">
+            <button class="border-2 border-purple-600 text-purple-600 px-8 py-3 rounded-xl font-semibold hover:bg-purple-600 hover:text-white hover:translate-x-1 transition-all duration-300 inline-flex items-center gap-2" @onclick="ViewAllJournals">
+                View All Journals <i class="bi bi-arrow-right"></i>
+            </button>
         </div>
     }
 </div>
 
 @code {
-    void Save()
-    {
-        VM.SaveEntry();
+    List<JournalEntry> RecentEntries = new();
 
-        // Clear input fields after saving
-        VM.Title = string.Empty;
-        VM.Content = string.Empty;
-        VM.PrimaryMood = string.Empty;
-        VM.Tags = string.Empty;
+    protected override void OnInitialized()
+    {
+        RecentEntries = DB.GetAllEntries()
+                          .OrderByDescending(e => e.EntryDate)
+                          .Take(3)
+                          .ToList();
+    }
+
+    void GoToTodayJournal()
+    {
+        Nav.NavigateTo("/journal");
+    }
+
+    void ViewAllJournals()
+    {
+        Nav.NavigateTo("/journals");
+    }
+
+    void ViewMoreEntry(int id)
+    {
+        Nav.NavigateTo($"/journal/{id}");
     }
 }

@@ -1,0 +1,40 @@
+﻿@page "/lock"
+@using Journal_Entry.Services
+@inject SecurityService Security
+@inject NavigationManager Nav
+
+
+<h3>🔒 Enter PIN</h3>
+
+<input type="password"
+       maxlength="4"
+       @bind="enteredPin"
+       class="form-control" />
+
+<button class="btn btn-primary mt-3" @onclick="Unlock">
+    Unlock
+</button>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p style="color:red">@error</p>
+}
+
+@code {
+    private string enteredPin = "";
+    private string error = "";
+
+    private async Task Unlock()
+    {
+        var savedPin = await Security.GetPinAsync();
+
+        if (enteredPin == savedPin)
+        {
+            Nav.NavigateTo("/journal");
+        }
+        else
+        {
+            error = "Incorrect PIN";
+        }
+    }
+}
