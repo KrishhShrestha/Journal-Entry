@@ -1,0 +1,319 @@
+﻿@page "/dashboard"
+@using Journal_Entry.Models
+@inject Journal_Entry.Services.DatabaseService Db
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">📊 Dashboard</h2>
+        <small class="text-muted">Your journaling insights</small>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                            <span class="fs-4">📝</span>
+                        </div>
+                    </div>
+                    <h6 class="text-muted text-uppercase small mb-2">Total Entries</h6>
+                    <h2 class="fw-bold mb-0">@TotalEntries</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3">
+                            <span class="fs-4">🔥</span>
+                        </div>
+                    </div>
+                    <h6 class="text-muted text-uppercase small mb-2">Current Streak</h6>
+                    <h2 class="fw-bold mb-0">@CurrentStreak <small class="fs-6 text-muted">days</small></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3">
+                            <span class="fs-4">🏆</span>
+                        </div>
+                    </div>
+                    <h6 class="text-muted text-uppercase small mb-2">Longest Streak</h6>
+                    <h2 class="fw-bold mb-0">@LongestStreak <small class="fs-6 text-muted">days</small></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100 stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3">
+                            <span class="fs-4">😊</span>
+                        </div>
+                    </div>
+                    <h6 class="text-muted text-uppercase small mb-2">Top Mood</h6>
+                    <h4 class="fw-bold mb-0">@MostFrequentMood</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="row g-4">
+        <!-- Mood Distribution -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">🎭 Mood Distribution</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    @if (MoodDistribution.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var mood in MoodDistribution.OrderByDescending(m => m.Value).Take(6))
+                            {
+                                var percentage = (mood.Value * 100.0 / TotalEntries);
+                                <div class="list-group-item border-0 px-0 py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-medium">@mood.Key</span>
+                                        <span class="badge bg-primary rounded-pill">@mood.Value</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar" role="progressbar" style="width: @(percentage)%"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No mood data yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tag Statistics -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">🏷️ Popular Tags</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    @if (TagStats.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var tag in TagStats.OrderByDescending(t => t.Value).Take(10))
+                            {
+                                <span class="badge bg-light text-dark border px-3 py-2">
+                                    @tag.Key <span class="badge bg-primary rounded-pill ms-1">@tag.Value</span>
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No tags yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Word Count Trends -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">📈 Recent Activity</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    @if (WordCountTrends.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0">Date</th>
+                                        <th class="border-0 text-end">Words</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var wc in WordCountTrends.OrderByDescending(w => w.Key).Take(8))
+                                    {
+                                        <tr>
+                                            <td>@wc.Key.ToString("MMM dd, yyyy")</td>
+                                            <td class="text-end">
+                                                <span class="badge bg-secondary rounded-pill">@wc.Value</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No entries yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .stat-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .badge.bg-light {
+        font-weight: 500;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+</style>
+
+@code {
+
+    private int TotalEntries;
+    private int CurrentStreak;
+    private int LongestStreak;
+    private string MostFrequentMood = "N/A";
+
+    private Dictionary<string, int> MoodDistribution = new();
+    private Dictionary<string, int> TagStats = new();
+    private Dictionary<DateTime, int> WordCountTrends = new();
+
+    protected override void OnInitialized()
+    {
+        var entries = Db.GetAllEntries();
+
+        TotalEntries = entries.Count;
+
+        CalculateStreaks(entries);
+        CalculateMoodDistribution(entries);
+        CalculateTagStats(entries);
+        CalculateWordCounts(entries);
+    }
+
+    private void CalculateStreaks(List<JournalEntry> entries)
+    {
+        if (!entries.Any())
+        {
+            CurrentStreak = 0;
+            LongestStreak = 0;
+            return;
+        }
+
+        var dates = entries
+            .Select(e => e.EntryDate.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .ToList();
+
+        int current = 0;
+        for (int i = 0; i < dates.Count; i++)
+        {
+            if (dates[i] == DateTime.Today.AddDays(-i))
+                current++;
+            else
+                break;
+        }
+
+        CurrentStreak = current;
+
+        int longest = 1, temp = 1;
+        for (int i = 1; i < dates.Count; i++)
+        {
+            if (dates[i - 1] == dates[i].AddDays(1))
+            {
+                temp++;
+                longest = Math.Max(longest, temp);
+            }
+            else
+            {
+                temp = 1;
+            }
+        }
+
+        LongestStreak = longest;
+    }
+
+    private void CalculateMoodDistribution(List<JournalEntry> entries)
+    {
+        MoodDistribution = entries
+            .Where(e => !string.IsNullOrEmpty(e.PrimaryMood))
+            .GroupBy(e => e.PrimaryMood)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        if (MoodDistribution.Any())
+        {
+            MostFrequentMood = MoodDistribution
+                .OrderByDescending(m => m.Value)
+                .First().Key;
+        }
+    }
+
+    private void CalculateTagStats(List<JournalEntry> entries)
+    {
+        var tags = new List<string>();
+
+        foreach (var entry in entries)
+        {
+            if (!string.IsNullOrWhiteSpace(entry.Tags))
+            {
+                tags.AddRange(
+                    entry.Tags
+                        .Split(',')
+                        .Select(t => t.Trim())
+                        .Where(t => t.Length > 0)
+                );
+            }
+        }
+
+        TagStats = tags
+            .GroupBy(t => t)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    private void CalculateWordCounts(List<JournalEntry> entries)
+    {
+        WordCountTrends = entries
+            .OrderBy(e => e.EntryDate)
+            .ToDictionary(
+                e => e.EntryDate,
+                e => string.IsNullOrWhiteSpace(e.Content)
+                        ? 0
+                        : e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length
+            );
+    }
+}

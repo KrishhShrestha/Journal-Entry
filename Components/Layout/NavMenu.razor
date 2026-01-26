@@ -1,17 +1,22 @@
-﻿<nav class="nav flex-column">
-    <a class="nav-link text-white fw-bold mb-3">
-        Journal Entry
-    </a>
+﻿<div class="sidebar-inner">
+    <div class="sidebar-title">
+        📔 Journal Entry
+    </div>
 
-    <NavLink class="nav-link text-white" href="" Match="NavLinkMatch.All">
-        🏠 Home
-    </NavLink>
+    <nav class="sidebar-links">
+        <NavLink href="" Match="NavLinkMatch.All" class="sidebar-link">
+            🏠 Home
+        </NavLink>
 
-    <NavLink class="nav-link text-white" href="/journal">
-        📓 Today
-    </NavLink>
+        <NavLink href="/journal" class="sidebar-link">
+            ✍️ Today
+        </NavLink>
 
-    <NavLink class="nav-link text-white" href="/journals">
-        📚 All Journals
-    </NavLink>
-</nav>
+        <NavLink href="/journals" class="sidebar-link">
+            📚 All Journals
+        </NavLink>
+        <NavLink href="/dashboard" class="sidebar-link">
+            📚 Dashboard
+        </NavLink>
+    </nav>
+</div>

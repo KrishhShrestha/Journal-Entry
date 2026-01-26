@@ -4,10 +4,12 @@
 @inject SecurityService Security
 
 
-<div class="page">
-    <NavMenu />
+<div class="app-shell">
+    <aside class="sidebar">
+        <NavMenu />
+    </aside>
 
-    <main>
+    <main class="main-content">
         @Body
     </main>
 </div>
