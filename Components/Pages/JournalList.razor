@@ -1,10 +1,18 @@
 ﻿@page "/journals"
 @using Journal_Entry.Models
-@inject Journal_Entry.Services.DatabaseService DB
+@using Journal_Entry.Services
+@inject DatabaseService DB
+@inject PdfService PdfService
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <div class="container mt-4">
-    <h3 class="mb-3">All Journal Entries</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>All Journal Entries</h3>
+        <button class="btn btn-success" @onclick="DownloadAllEntries">
+            <i class="bi bi-download"></i> Download All as PDF
+        </button>
+    </div>
 
     <table class="table table-striped table-bordered">
         <thead class="table-dark">
@@ -12,7 +20,7 @@
                 <th>Date</th>
                 <th>Title</th>
                 <th>Mood</th>
-                <th>Action</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -23,11 +31,15 @@
                     <td>@entry.Title</td>
                     <td>@entry.PrimaryMood</td>
                     <td>
-                        <button class="btn btn-sm btn-primary"
+                        <button class="btn btn-sm btn-primary me-1"
                                 @onclick="() => OpenEntry(entry.Id)">
                             View
                         </button>
-                        <button class="btn btn-sm btn-primary"
+                        <button class="btn btn-sm btn-info me-1"
+                                @onclick="() => DownloadSingleEntry(entry.Id)">
+                            Download
+                        </button>
+                        <button class="btn btn-sm btn-danger"
                                 @onclick="() => DeleteEntry(entry.Id)">
                             Delete
                         </button>
@@ -50,9 +62,29 @@
     {
         Nav.NavigateTo($"/journal/{id}");
     }
+
     void DeleteEntry(int id)
     {
         DB.DeleteEntry(id);
         Entries = DB.GetAllEntries();
-	}
+    }
+
+    async Task DownloadSingleEntry(int id)
+    {
+        var entry = DB.GetEntry(id);
+        if (entry == null) return;
+
+        var pdfBytes = PdfService.GenerateSingleEntryPdf(entry);
+        var fileName = $"{entry.Title.Replace(" ", "_")}_{entry.EntryDate:yyyy-MM-dd}.pdf";
+
+        await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdfBytes));
+    }
+
+    async Task DownloadAllEntries()
+    {
+        var pdfBytes = PdfService.GenerateAllEntriesPdf(Entries);
+        var fileName = $"All_Journal_Entries_{DateTime.Now:yyyy-MM-dd}.pdf";
+
+        await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdfBytes));
+    }
 }

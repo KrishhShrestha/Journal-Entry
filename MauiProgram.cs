@@ -27,6 +27,7 @@ namespace Journal_Entry
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddSyncfusionBlazor();
             builder.Services.AddSingleton<SecurityService>();
+            builder.Services.AddSingleton<PdfService>();
 
 
 

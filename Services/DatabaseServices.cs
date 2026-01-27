@@ -26,7 +26,6 @@ namespace Journal_Entry.Services
         public void SaveOrUpdateEntry(JournalEntry entry)
         {
             var existing = GetTodayEntry();
-
             if (existing == null)
             {
                 _db.Insert(entry);
@@ -45,9 +44,16 @@ namespace Journal_Entry.Services
                       .OrderByDescending(e => e.EntryDate)
                       .ToList();
         }
+
         public void DeleteEntry(int id)
         {
             _db.Delete<JournalEntry>(id);
+        }
+
+        public JournalEntry? GetEntry(int id)
+        {
+            return _db.Table<JournalEntry>()
+                      .FirstOrDefault(e => e.Id == id);
         }
     }
 }
