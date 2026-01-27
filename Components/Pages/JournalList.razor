@@ -24,7 +24,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var entry in Entries)
+            @foreach (var entry in PaginatedEntries)
             {
                 <tr>
                     <td>@entry.EntryDate.ToShortDateString()</td>
@@ -37,7 +37,7 @@
                         </button>
                         <button class="btn btn-sm btn-info me-1"
                                 @onclick="() => DownloadSingleEntry(entry.Id)">
-                            Download
+                            PDF
                         </button>
                         <button class="btn btn-sm btn-danger"
                                 @onclick="() => DeleteEntry(entry.Id)">
@@ -48,10 +48,76 @@
             }
         </tbody>
     </table>
+
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <span>Showing @StartIndex to @EndIndex of @TotalEntries entries</span>
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination mb-0">
+                <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="FirstPage" disabled="@(CurrentPage == 1)">
+                        First
+                    </button>
+                </li>
+                <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                    <button class="page-link" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">
+                        Previous
+                    </button>
+                </li>
+
+                @for (int i = StartPage; i <= EndPage; i++)
+                {
+                    var pageNumber = i;
+                    <li class="page-item @(CurrentPage == pageNumber ? "active" : "")">
+                        <button class="page-link" @onclick="() => GoToPage(pageNumber)">
+                            @pageNumber
+                        </button>
+                    </li>
+                }
+
+                <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                    <button class="page-link" @onclick="NextPage" disabled="@(CurrentPage == TotalPages)">
+                        Next
+                    </button>
+                </li>
+                <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                    <button class="page-link" @onclick="LastPage" disabled="@(CurrentPage == TotalPages)">
+                        Last
+                    </button>
+                </li>
+            </ul>
+        </nav>
+        <div>
+            <select class="form-select form-select-sm" style="width: auto;" @onchange="ChangePageSize">
+                <option value="5" selected="@(PageSize == 5)">5 per page</option>
+                <option value="10" selected="@(PageSize == 10)">10 per page</option>
+                <option value="20" selected="@(PageSize == 20)">20 per page</option>
+                <option value="50" selected="@(PageSize == 50)">50 per page</option>
+            </select>
+        </div>
+    </div>
 </div>
 
 @code {
     List<JournalEntry> Entries = new();
+
+    // Pagination properties
+    private int CurrentPage { get; set; } = 1;
+    private int PageSize { get; set; } = 10;
+    private int TotalPages => (int)Math.Ceiling((double)TotalEntries / PageSize);
+    private int TotalEntries => Entries.Count;
+    private int StartIndex => (CurrentPage - 1) * PageSize + 1;
+    private int EndIndex => Math.Min(CurrentPage * PageSize, TotalEntries);
+
+    // Calculate visible page numbers
+    private int StartPage => Math.Max(1, CurrentPage - 2);
+    private int EndPage => Math.Min(TotalPages, CurrentPage + 2);
+
+    // Get paginated entries
+    private IEnumerable<JournalEntry> PaginatedEntries =>
+        Entries.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
 
     protected override void OnInitialized()
     {
@@ -67,6 +133,12 @@
     {
         DB.DeleteEntry(id);
         Entries = DB.GetAllEntries();
+
+        // Adjust current page if needed after deletion
+        if (PaginatedEntries.Count() == 0 && CurrentPage > 1)
+        {
+            CurrentPage--;
+        }
     }
 
     async Task DownloadSingleEntry(int id)
@@ -86,5 +158,39 @@
         var fileName = $"All_Journal_Entries_{DateTime.Now:yyyy-MM-dd}.pdf";
 
         await JS.InvokeVoidAsync("downloadFile", fileName, Convert.ToBase64String(pdfBytes));
+    }
+
+    // Pagination methods
+    void FirstPage()
+    {
+        CurrentPage = 1;
+    }
+
+    void LastPage()
+    {
+        CurrentPage = TotalPages;
+    }
+
+    void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+            CurrentPage++;
+    }
+
+    void PreviousPage()
+    {
+        if (CurrentPage > 1)
+            CurrentPage--;
+    }
+
+    void GoToPage(int pageNumber)
+    {
+        CurrentPage = pageNumber;
+    }
+
+    void ChangePageSize(ChangeEventArgs e)
+    {
+        PageSize = int.Parse(e.Value?.ToString() ?? "10");
+        CurrentPage = 1; // Reset to first page when changing page size
     }
 }
