@@ -85,11 +85,12 @@ h1:focus {
     .flex-column, .navbar-brand {
         padding-left: env(safe-area-inset-left);
     }
-
+    /* Add/Update Sidebar styles */
     .sidebar {
-        width: 250px;
-        min-width: 250px;
+        background-color: var(--bg-card) !important;
+        border-right: 1px solid var(--border-color) !important;
     }
+
 
     @media (max-width: 768px) {
         .sidebar {
@@ -328,3 +329,425 @@ h1:focus {
 }
 
 
+
+/* ============================================
+   THEME-AWARE STYLES FOR DARK/LIGHT MODE
+   Add this to your wwwroot/css/app.css
+   ============================================ */
+
+/* CSS Variables for Light Mode (Default) */
+:root {
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-card: #ffffff;
+    --border-color: #e5e7eb;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-hover: rgba(0, 0, 0, 0.15);
+    --input-bg: #ffffff;
+    --input-border: #e5e7eb;
+}
+
+/* CSS Variables for Dark Mode */
+[data-mud-theme="dark"] {
+    --text-primary: #f3f4f6;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2d2d2d;
+    --bg-card: #2d2d2d;
+    --border-color: #404040;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+    --input-bg: #2d2d2d;
+    --input-border: #404040;
+}
+
+/* ============================================
+   OVERRIDE BOOTSTRAP CLASSES TO BE THEME-AWARE
+   ============================================ */
+
+/* Text Colors */
+.text-dark {
+    color: var(--text-primary) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Card Backgrounds */
+.card {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.card-body {
+    color: var(--text-primary) !important;
+}
+
+.card-header {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.card-footer {
+    background-color: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--input-border) !important;
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: var(--input-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: #673AB7 !important;
+    }
+
+.form-label {
+    color: var(--text-secondary) !important;
+}
+
+/* Tables */
+.table {
+    color: var(--text-primary) !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.table-bordered {
+    border-color: var(--border-color) !important;
+}
+
+    .table-bordered > :not(caption) > * > * {
+        border-color: var(--border-color) !important;
+    }
+
+.table-dark {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Badges */
+.badge {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Progress Bars */
+.progress {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Small Text */
+small {
+    color: var(--text-muted) !important;
+}
+
+/* ============================================
+   CUSTOM COMPONENT STYLES (DASHBOARD, ETC.)
+   ============================================ */
+
+/* Dashboard Container */
+.container-fluid {
+    background-color: transparent !important;
+}
+
+/* Dashboard Headers */
+h2.fw-bold,
+h3.fw-bold,
+h4.fw-bold,
+h5.fw-bold,
+h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Dashboard Cards - Override Inline Styles */
+.card[style*="background"] {
+    background: var(--bg-card) !important;
+}
+
+/* Stats Card Text */
+.card-body h2,
+.card-body h3,
+.card-body h6 {
+    color: var(--text-primary) !important;
+}
+
+.card-body span {
+    color: var(--text-secondary) !important;
+}
+
+/* Button Groups */
+.btn-group .btn-outline-secondary {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+    .btn-group .btn-outline-secondary:hover {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+
+/* Input Modern Style Override */
+.input-modern {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--input-border) !important;
+}
+
+/* ============================================
+   JOURNAL SPECIFIC STYLES
+   ============================================ */
+
+/* Journal Container (Purple Gradient) - Keep as is, but adjust text */
+.journal-container h1,
+.journal-container .date-display {
+    color: white !important; /* Keep white on purple background */
+}
+
+/* Journal Card */
+.journal-card {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-title {
+    color: var(--text-primary) !important;
+}
+
+.input-label {
+    color: var(--text-secondary) !important;
+}
+
+/* Mood Selector */
+.mood {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+    .mood.selected {
+        background-color: #673AB7 !important;
+        color: white !important;
+        border-color: #673AB7 !important;
+    }
+
+/* Entry Content */
+.entry-content,
+.journal-content {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ============================================
+   HOME PAGE STYLES
+   ============================================ */
+
+/* Hero Section Text - Keep white on gradient */
+.bg-gradient-to-br h1,
+.bg-gradient-to-br p {
+    color: white !important;
+}
+
+/* Recent Entries Cards */
+.bg-white {
+    background-color: var(--bg-card) !important;
+}
+
+/* Grid Cards Text */
+div[class*="grid"] .bg-white h5 {
+    color: var(--text-primary) !important;
+}
+
+div[class*="grid"] .bg-white div {
+    color: var(--text-secondary) !important;
+}
+
+/* ============================================
+   NAVBAR STYLES - THEME AWARE
+   ============================================ */
+
+.modern-navbar {
+    background-color: var(--bg-card) !important;
+}
+
+.nav-item {
+    color: var(--text-secondary) !important;
+}
+
+    .nav-item:hover,
+    .nav-item.active {
+        color: #800080 !important;
+    }
+
+.navbar-brand {
+    color: #800080 !important;
+}
+
+/* ============================================
+   TAILWIND-LIKE UTILITY OVERRIDES
+   ============================================ */
+
+/* Text Colors */
+.text-gray-800,
+.text-gray-900 {
+    color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-700 {
+    color: var(--text-secondary) !important;
+}
+
+.text-gray-400,
+.text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+/* Background Colors */
+.bg-white {
+    background-color: var(--bg-card) !important;
+}
+
+.bg-gray-50,
+.bg-gray-100 {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* ============================================
+   RICH TEXT EDITOR CONTENT
+   ============================================ */
+
+.preview-content,
+.preview-content p,
+.entry-content p,
+.journal-content p {
+    color: var(--text-primary) !important;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.pagination .page-link {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+    .pagination .page-link:hover {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+
+.pagination .page-item.active .page-link {
+    background-color: #673AB7 !important;
+    border-color: #673AB7 !important;
+    color: white !important;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-muted) !important;
+}
+
+/* ============================================
+   SPECIAL FIXES FOR INLINE STYLES
+   ============================================ */
+
+/* Override inline background colors */
+[style*="background-color: #f9fafb"],
+[style*="background-color: #f3f4f6"] {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Override inline text colors */
+[style*="color: #1f2937"],
+[style*="color: #374151"] {
+    color: var(--text-primary) !important;
+}
+
+[style*="color: #6b7280"],
+[style*="color: #4a5568"] {
+    color: var(--text-secondary) !important;
+}
+
+/* ============================================
+   GENERAL IMPROVEMENTS
+   ============================================ */
+
+/* Ensure all headings use theme colors */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+}
+
+/* Ensure all paragraphs use theme colors */
+p {
+    color: var(--text-primary) !important;
+}
+
+/* Ensure all labels use theme colors */
+label {
+    color: var(--text-secondary) !important;
+}
+
+/* Body background */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Main container */
+.app-shell .main-content {
+    background-color: var(--bg-primary) !important;
+}
+
+
+/* ============================================
+   ADDITIONAL DARK MODE BACKGROUND FIX
+   ============================================ */
+
+/* Force the entire page background to match theme */
+html, body {
+    background-color: var(--bg-primary) !important;
+    min-height: 100vh;
+}
+
+/* Ensure the app shell fills the screen */
+.app-shell {
+    min-height: 100vh;
+    background-color: var(--bg-primary) !important;
+}
+
+/* Main content area should also have dark background */
+.main-content {
+    background-color: var(--bg-primary) !important;
+    min-height: 100vh;
+}
+
+/* Container adjustments */
+.container,
+.max-w-7xl {
+    background-color: transparent !important;
+}
+
+/* Ensure no white backgrounds leak through */
+.mx-auto {
+    background-color: transparent !important;
+}

@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using Journal_Entry.Services;
+﻿using Journal_Entry.Services;
 using Journal_Entry.ViewModels;
-using Syncfusion.Licensing;
+using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 using Syncfusion.Blazor;
+using Syncfusion.Licensing;
+using MudBlazor.Services;
 
 
 
@@ -28,6 +30,12 @@ namespace Journal_Entry
             builder.Services.AddSyncfusionBlazor();
             builder.Services.AddSingleton<SecurityService>();
             builder.Services.AddSingleton<PdfService>();
+
+              
+
+            builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddScoped<PdfService>();
+            builder.Services.AddMudServices();  
 
 
 

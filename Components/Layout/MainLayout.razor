@@ -1,36 +1,135 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @using Journal_Entry.Services
+@using MudBlazor
 @inject SecurityService Security
 
-<div class="app-shell">
+<!-- MudBlazor Providers -->
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="app-shell" data-mud-theme="@(_isDarkMode ? "dark" : "light")">
     <aside class="sidebar">
         <NavMenu />
     </aside>
     <main class="main-content">
         @Body
     </main>
+
+    <!-- Floating Theme Switcher -->
+    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 9999;">
+        <MudTooltip Text="Toggle Theme" Placement="Placement.Left">
+            <MudFab Color="Color.Primary"
+                    StartIcon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                    Size="Size.Large"
+                    OnClick="@ToggleDarkMode" />
+        </MudTooltip>
+    </div>
 </div>
 
 @code {
+    private bool _isDarkMode = false;
+    private MudTheme _theme = new MudTheme();
+
     protected override async Task OnInitializedAsync()
     {
         var isPinSet = await Security.IsPinSetAsync();
         var isAuthenticated = await Security.IsAuthenticatedAsync();
         var currentUri = Nav.ToBaseRelativePath(Nav.Uri);
 
-        // If no PIN is set, redirect to setup
         if (!isPinSet && !currentUri.StartsWith("setup"))
         {
             Nav.NavigateTo("/setup", true);
             return;
         }
 
-        // If PIN is set but not authenticated, redirect to lock
         if (isPinSet && !isAuthenticated && !currentUri.StartsWith("lock") && !currentUri.StartsWith("setup"))
         {
             Nav.NavigateTo("/lock", true);
             return;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var savedDarkMode = await JS.InvokeAsync<string>("localStorage.getItem", "isDarkMode");
+                if (!string.IsNullOrEmpty(savedDarkMode))
+                {
+                    _isDarkMode = bool.Parse(savedDarkMode);
+                    SetTheme(_isDarkMode);
+
+                    // Update the data attribute on the body/html
+                    await JS.InvokeVoidAsync("eval",
+                        $"document.querySelector('.app-shell').setAttribute('data-mud-theme', '{(_isDarkMode ? "dark" : "light")}')");
+
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+                SetTheme(false); // default to light
+            }
+        }
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+        SetTheme(_isDarkMode);
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "isDarkMode", _isDarkMode.ToString());
+
+            // Update the data attribute dynamically
+            await JS.InvokeVoidAsync("eval",
+                $"document.querySelector('.app-shell').setAttribute('data-mud-theme', '{(_isDarkMode ? "dark" : "light")}')");
+        }
+        catch { }
+
+        StateHasChanged();
+    }
+
+    private void SetTheme(bool darkMode)
+    {
+        if (darkMode)
+        {
+            _theme = new MudTheme
+            {
+                PaletteDark = new PaletteDark
+                {
+                    Primary = "#673AB7",
+                    Background = "#121212",
+                    Surface = "#1E1E1E",
+                    DrawerBackground = "#1E1E1E",
+                    DrawerText = "rgba(255,255,255,0.87)",
+                    TextPrimary = "#f3f4f6",
+                    TextSecondary = "#d1d5db"
+                }
+            };
+        }
+        else
+        {
+            _theme = new MudTheme
+            {
+                PaletteLight = new PaletteLight
+                {
+                    Primary = "#673AB7",
+                    Background = "#F5F5F5",
+                    Surface = "#FFFFFF",
+                    DrawerBackground = "#FFFFFF",
+                    DrawerText = "rgba(0,0,0,0.87)",
+                    TextPrimary = "#1f2937",
+                    TextSecondary = "#6b7280"
+                }
+            };
         }
     }
 }
