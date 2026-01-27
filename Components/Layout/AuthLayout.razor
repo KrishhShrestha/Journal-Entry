@@ -1,0 +1,32 @@
+﻿@using Journal_Entry.Services
+@inject SecurityService Security
+@inject NavigationManager Nav
+@inherits LayoutComponentBase
+
+@Body
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var currentPath = new Uri(Nav.Uri).AbsolutePath;
+
+        // Check if PIN exists
+        var hasPin = await Security.HasPinAsync();
+
+        if (!hasPin && currentPath != "/setup")
+        {
+            // No PIN set, redirect to setup
+            Nav.NavigateTo("/setup", forceLoad: true);
+            return;
+        }
+
+        // Check if authenticated
+        var isAuthenticated = await Security.IsAuthenticatedAsync();
+
+        if (hasPin && !isAuthenticated && currentPath != "/lock" && currentPath != "/setup")
+        {
+            // Has PIN but not authenticated, redirect to lock
+            Nav.NavigateTo("/lock", forceLoad: true);
+        }
+    }
+}

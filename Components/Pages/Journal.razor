@@ -1,6 +1,7 @@
 ﻿@page "/journal"
 @inject Journal_Entry.ViewModels.JournalViewModel VM
 @using Syncfusion.Blazor.RichTextEditor
+@using System.Text.RegularExpressions
 
 <style>
     .journal-container {
@@ -14,504 +15,249 @@
     .page-header {
         text-align: center;
         margin-bottom: 2rem;
-        animation: slideDown 0.5s ease-out;
     }
 
     .page-header h1 {
         color: white;
-        font-size: 2.5rem;
+        font-size: 2.4rem;
         font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .page-header .date-display {
-        color: rgba(255, 255, 255, 0.95);
-        font-size: 1.1rem;
+    .date-display {
+        color: rgba(255,255,255,0.9);
     }
 
     .two-column-layout {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
-        align-items: start;
-    }
-
-    .left-column, .right-column {
-        animation: slideUp 0.5s ease-out;
-    }
-
-    .right-column {
-        animation-delay: 0.1s;
     }
 
     .journal-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: white;
+        border-radius: 18px;
         padding: 2rem;
-        height: fit-content;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     }
 
     .card-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
+        margin-bottom: 1.2rem;
         border-bottom: 2px solid #e2e8f0;
-    }
-
-    @@keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        padding-bottom: 0.6rem;
     }
 
     .input-group-modern {
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.2rem;
     }
 
     .input-label {
-        display: block;
         font-weight: 600;
         color: #4a5568;
-        margin-bottom: 0.5rem;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+        display: block;
     }
 
     .input-modern {
         width: 100%;
-        padding: 0.85rem 1rem;
-        border: 2px solid #e2e8f0;
+        padding: 0.8rem;
         border-radius: 10px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        background: #f7fafc;
-    }
-
-    .input-modern:focus {
-        outline: none;
-        border-color: #667eea;
-        background: white;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        transform: translateY(-1px);
-    }
-
-    .input-modern::placeholder {
-        color: #a0aec0;
+        border: 2px solid #e2e8f0;
     }
 
     .editor-wrapper {
+        border: 2px solid #e2e8f0;
         border-radius: 10px;
         overflow: hidden;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-        background: white;
     }
 
-    .editor-wrapper:focus-within {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .mood-selector-compact {
+    .mood-selector {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
     }
 
-    .mood-option-compact {
+    .mood {
         width: 45px;
         height: 45px;
-        border: 2px solid #e2e8f0;
         border-radius: 10px;
+        border: 2px solid #e2e8f0;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s ease;
-        background: #f7fafc;
     }
 
-    .mood-option-compact:hover {
+    .mood.selected {
+        background: #667eea;
+        color: white;
         border-color: #667eea;
-        transform: scale(1.1);
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-    }
-
-    .mood-option-compact.selected {
-        border-color: #667eea;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        transform: scale(1.05);
-    }
-
-    .mood-emoji-compact {
-        font-size: 1.5rem;
-    }
-
-    .tags-input {
-        position: relative;
-    }
-
-    .tag-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #667eea;
-        font-size: 1.2rem;
-    }
-
-    .tags-input input {
-        padding-left: 3rem;
     }
 
     .save-btn {
         width: 100%;
         padding: 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 10px;
-        color: white;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .save-btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    }
-
-    .save-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    /* Right Column - Saved Entry Styles */
-    .saved-entry-content {
-        max-height: calc(100vh - 250px);
-        overflow-y: auto;
-    }
-
-    .saved-entry-content::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .saved-entry-content::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-
-    .saved-entry-content::-webkit-scrollbar-thumb {
         background: #667eea;
+        border: none;
+        color: white;
+        font-weight: bold;
         border-radius: 10px;
-    }
-
-    .entry-title {
-        color: #2d3748;
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
+        cursor: pointer;
     }
 
     .entry-content {
         background: #f7fafc;
-        padding: 1.25rem;
+        padding: 1rem;
         border-radius: 10px;
-        margin: 1rem 0;
         line-height: 1.7;
-        color: #2d3748;
     }
 
-    .entry-meta {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        color: #4a5568;
-        font-size: 0.85rem;
-        background: #f7fafc;
-        padding: 0.4rem 0.8rem;
-        border-radius: 8px;
-    }
-
-    .meta-icon {
-        font-size: 1rem;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: #718096;
-    }
-
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-    }
-
-    .empty-state h3 {
-        color: #2d3748;
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .empty-state p {
-        color: #718096;
-        font-size: 0.95rem;
-    }
-
-    .loading-spinner {
-        text-align: center;
-        padding: 3rem;
-    }
-
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid #e2e8f0;
-        border-top: 4px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto;
-    }
-
-    @@keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    @@media (max-width: 1024px) {
+    @@media (max-width: 900px) {
         .two-column-layout {
             grid-template-columns: 1fr;
-        }
-        
-        .right-column {
-            order: 2;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .page-header h1 {
-            font-size: 1.8rem;
-        }
-        
-        .journal-card {
-            padding: 1.5rem;
-        }
-        
-        .mood-selector-compact {
-            justify-content: center;
         }
     }
 </style>
 
 <div class="journal-container">
-    <!-- Header -->
+
+    <!-- HEADER -->
     <div class="page-header">
         <h1>✨ Today's Journal</h1>
-        <div class="date-display">@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</div>
+        <div class="date-display">
+            @DateTime.Now.ToString("dddd, MMMM dd, yyyy")
+        </div>
     </div>
 
-    <!-- Two Column Layout -->
     <div class="two-column-layout">
-        <!-- Left Column - Journal Entry Form -->
-        <div class="left-column">
-            <div class="journal-card">
-                <div class="card-title">Create Entry</div>
-                
-                <!-- Title Input -->
-                <div class="input-group-modern">
-                    <label class="input-label">📝 Title</label>
-                    <input placeholder="Give your day a title..." 
-                           @bind="VM.Title" 
-                           class="input-modern" />
-                </div>
-                
-                <!-- RichTextEditor -->
-                <div class="input-group-modern">
-                    <label class="input-label">📖 Your Story</label>
-                    <div class="editor-wrapper">
-                        @if (isEditorReady)
-                        {
-                            <SfRichTextEditor @bind-Value="VM.Content" 
-                                              Height="280px"
-                                              ShowTooltip="false"
-                                              Placeholder="Write about your day...">
-                                <RichTextEditorToolbarSettings>
-                                    <RichTextEditorToolbarItems Items="ToolbarItems"></RichTextEditorToolbarItems>
-                                </RichTextEditorToolbarSettings>
-                            </SfRichTextEditor>
-                        }
-                        else
-                        {
-                            <div class="loading-spinner">
-                                <div class="spinner"></div>
-                                <p style="margin-top: 1rem; color: #667eea;">Loading editor...</p>
-                            </div>
-                        }
-                    </div>
-                </div>
-                
-                <!-- Mood Selector -->
-                <div class="input-group-modern">
-                    <label class="input-label">😊 Mood</label>
-                    <div class="mood-selector-compact">
-                        @foreach (var mood in GetMoodsWithEmojis())
-                        {
-                            <div class="mood-option-compact @(VM.PrimaryMood == mood.Name ? "selected" : "")"
-                                 @onclick="() => VM.PrimaryMood = mood.Name"
-                                 title="@mood.Name">
-                                <span class="mood-emoji-compact">@mood.Emoji</span>
-                            </div>
-                        }
-                    </div>
-                </div>
-                
-                <!-- Tags Input -->
-                <div class="input-group-modern tags-input">
-                    <label class="input-label">🏷️ Tags</label>
-                    <span class="tag-icon">#</span>
-                    <input placeholder="work, personal, gratitude..." 
-                           @bind="VM.Tags" 
-                           class="input-modern" />
-                </div>
-                
-                <!-- Save Button -->
-                <button class="save-btn" @onclick="Save" disabled="@(!isEditorReady)">
-                    💾 Save Entry
-                </button>
+
+        <!-- LEFT: CREATE ENTRY -->
+        <div class="journal-card">
+            <div class="card-title">Create Entry</div>
+
+            <div class="input-group-modern">
+                <label class="input-label">Title</label>
+                <input class="input-modern" @bind="VM.Title" placeholder="Give your day a title..." />
             </div>
+
+            <div class="input-group-modern">
+                <label class="input-label">Your Story</label>
+                <div class="editor-wrapper">
+                    <SfRichTextEditor
+                        @bind-Value="VM.Content"
+                        Height="260px"
+                        Enabled="true"
+                        ShowTooltip="false"
+                        Placeholder="Write about your day...">
+
+                        <RichTextEditorToolbarSettings>
+                            <RichTextEditorToolbarItems Items="ToolbarItems" />
+                        </RichTextEditorToolbarSettings>
+
+                    </SfRichTextEditor>
+                </div>
+            </div>
+
+            <div class="input-group-modern">
+                <label class="input-label">Mood</label>
+                <div class="mood-selector">
+                    @foreach (var mood in Moods)
+                    {
+                        <div class="mood @(VM.PrimaryMood == mood.Name ? "selected" : "")"
+                             @onclick="() => VM.PrimaryMood = mood.Name"
+                             title="@mood.Name">
+                            @mood.Emoji
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="input-group-modern">
+                <label class="input-label">Tags</label>
+                <input class="input-modern" @bind="VM.Tags" placeholder="work, personal, gratitude" />
+            </div>
+
+            <button class="save-btn" @onclick="Save">
+                💾 Save Entry
+            </button>
         </div>
-        
-        <!-- Right Column - Saved Entry -->
-        <div class="right-column">
+
+        <!-- RIGHT: SAVED ENTRY -->
+        <div class="journal-card">
+            <div class="card-title">Saved Entry</div>
+
             @if (VM.TodayEntry != null)
             {
-                <div class="journal-card">
-                    <div class="card-title">✅ Saved Entry</div>
-                    
-                    <div class="saved-entry-content">
-                        <h3 class="entry-title">@VM.TodayEntry.Title</h3>
-                        
-                        <div class="entry-content">
-                            @((MarkupString)VM.TodayEntry.Content)
-                        </div>
-                        
-                        <div class="entry-meta">
-                            <div class="meta-item">
-                                <span class="meta-icon">😊</span>
-                                <span>@VM.TodayEntry.PrimaryMood</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-icon">🏷️</span>
-                                <span>@VM.TodayEntry.Tags</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-icon">🕐</span>
-                                <span>@VM.TodayEntry.UpdatedAt.ToString("h:mm tt")</span>
-                            </div>
-                        </div>
-                    </div>
+                <h3>@VM.TodayEntry.Title</h3>
+
+                <div class="entry-content">
+                    @((MarkupString)VM.TodayEntry.Content)
                 </div>
+
+                <p><b>Mood:</b> @VM.TodayEntry.PrimaryMood</p>
+                <p><b>Tags:</b> @VM.TodayEntry.Tags</p>
             }
             else
             {
-                <div class="journal-card empty-state">
-                    <div class="empty-icon">📝</div>
-                    <h3>No Entry Yet</h3>
-                    <p>Create your first journal entry for today!</p>
-                </div>
+                <p>No entry saved yet.</p>
             }
         </div>
+
     </div>
 </div>
 
 @code {
-    private bool isEditorReady = false;
 
     List<ToolbarItemModel> ToolbarItems = new()
     {
         new ToolbarItemModel { Command = ToolbarCommand.Bold },
         new ToolbarItemModel { Command = ToolbarCommand.Italic },
         new ToolbarItemModel { Command = ToolbarCommand.Underline },
-        new ToolbarItemModel { Command = ToolbarCommand.StrikeThrough },
-        new ToolbarItemModel { Command = ToolbarCommand.Formats },
-        new ToolbarItemModel { Command = ToolbarCommand.Alignments },
         new ToolbarItemModel { Command = ToolbarCommand.OrderedList },
         new ToolbarItemModel { Command = ToolbarCommand.UnorderedList },
         new ToolbarItemModel { Command = ToolbarCommand.CreateLink }
     };
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    List<(string Name, string Emoji)> Moods = new()
     {
-        if (firstRender)
-        {
-            await Task.Delay(300);
-            isEditorReady = true;
-            StateHasChanged();
-        }
-    }
+        ("Happy","😊"),
+        ("Calm","😌"),
+        ("Sad","😢"),
+        ("Anxious","😰"),
+        ("Grateful","🙏"),
+        ("Motivated","💪")
+    };
 
     void Save()
     {
+        VM.Content = CleanHtml(VM.Content);
+
+        if (string.IsNullOrWhiteSpace(VM.Content))
+            return;
+
         VM.SaveEntry();
-        VM.Title = string.Empty;
-        VM.Content = string.Empty;
-        VM.PrimaryMood = string.Empty;
-        VM.Tags = string.Empty;
+
+        VM.Title = "";
+        VM.Content = "";
+        VM.PrimaryMood = "";
+        VM.Tags = "";
     }
 
-    private List<(string Name, string Emoji)> GetMoodsWithEmojis()
+    string CleanHtml(string html)
     {
-        return new List<(string, string)>
-        {
-            ("Happy", "😊"),
-            ("Excited", "🤩"),
-            ("Calm", "😌"),
-            ("Grateful", "🙏"),
-            ("Sad", "😢"),
-            ("Anxious", "😰"),
-            ("Angry", "😠"),
-            ("Tired", "😴"),
-            ("Motivated", "💪"),
-            ("Thoughtful", "🤔")
-        };
+        if (string.IsNullOrWhiteSpace(html))
+            return "";
+
+        html = Regex.Replace(
+            html,
+            "<richtexteditortoolbaritems[\\s\\S]*?</richtexteditortoolbaritems>",
+            "",
+            RegexOptions.IgnoreCase
+        );
+
+        html = html.Replace("<p><br></p>", "").Trim();
+
+        return html;
     }
 }

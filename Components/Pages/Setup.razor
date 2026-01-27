@@ -1,35 +1,706 @@
 ﻿@page "/setup"
+@using Journal_Entry.Components.Layout
+@layout AuthLayout
 @using Journal_Entry.Services
 @inject SecurityService Security
 @inject NavigationManager Nav
 
-<h3>🔐 Setup Security</h3>
+<div class="setup-container">
+    <div class="setup-card">
+        <!-- Header Section -->
+        <div class="setup-header">
+            <div class="setup-icon">
+                <span style="font-size: 48px;">🔐</span>
+            </div>
+            <h2 class="setup-title">Secure Your Journal</h2>
+            <p class="setup-subtitle">Set up your security credentials</p>
+        </div>
 
-<input placeholder="Username"
-       @bind="username"
-       class="form-control mb-2" />
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-step @(currentStep >= 1 ? "active" : "") @(currentStep > 1 ? "completed" : "")">
+                <div class="step-circle">1</div>
+                <span class="step-label">Username</span>
+            </div>
+            <div class="progress-line @(currentStep > 1 ? "completed" : "")"></div>
+            <div class="progress-step @(currentStep >= 2 ? "active" : "") @(currentStep > 2 ? "completed" : "")">
+                <div class="step-circle">2</div>
+                <span class="step-label">PIN</span>
+            </div>
+            <div class="progress-line @(currentStep > 2 ? "completed" : "")"></div>
+            <div class="progress-step @(currentStep >= 3 ? "active" : "")">
+                <div class="step-circle">3</div>
+                <span class="step-label">Confirm</span>
+            </div>
+        </div>
 
-<input type="password"
-       maxlength="4"
-       placeholder="Create PIN"
-       @bind="pin"
-       class="form-control mb-2" />
+        <!-- Step 1: Username -->
+        @if (currentStep == 1)
+        {
+            <div class="step-content">
+                <h3 class="step-title">Choose Your Username</h3>
+                <p class="step-description">This will be displayed in your journal</p>
 
-<button class="btn btn-success" @onclick="Save">
-    Save & Continue
-</button>
+                <div class="input-group">
+                    <input type="text"
+                           class="setup-input"
+                           placeholder="Enter username"
+                           @bind="username"
+                           @bind:event="oninput"
+                           maxlength="20" />
+                    @if (!string.IsNullOrEmpty(usernameError))
+                    {
+                        <div class="input-error">@usernameError</div>
+                    }
+                </div>
+
+                <button class="setup-btn" @onclick="NextToPin" disabled="@(string.IsNullOrWhiteSpace(username))">
+                    Continue
+                </button>
+            </div>
+        }
+
+        <!-- Step 2: Set PIN -->
+        @if (currentStep == 2)
+        {
+            <div class="step-content">
+                <h3 class="step-title">Create Your 4-Digit PIN</h3>
+                <p class="step-description">This PIN will protect your journal</p>
+
+                <div class="pin-display">
+                    <div class="pin-dots">
+                        <div class="pin-dot @(pin.Length >= 1 ? "filled" : "")"></div>
+                        <div class="pin-dot @(pin.Length >= 2 ? "filled" : "")"></div>
+                        <div class="pin-dot @(pin.Length >= 3 ? "filled" : "")"></div>
+                        <div class="pin-dot @(pin.Length >= 4 ? "filled" : "")"></div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(pinError))
+                {
+                    <div class="error-message">
+                        <span>⚠️</span> @pinError
+                    </div>
+                }
+
+                <!-- Number Pad -->
+                <div class="number-pad">
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddPinDigit('1')">1</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('2')">2</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('3')">3</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddPinDigit('4')">4</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('5')">5</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('6')">6</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddPinDigit('7')">7</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('8')">8</button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('9')">9</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn back-btn" @onclick="BackToUsername">
+                            <span style="font-size: 16px;">← Back</span>
+                        </button>
+                        <button class="number-btn" @onclick="() => AddPinDigit('0')">0</button>
+                        <button class="number-btn delete-btn" @onclick="DeletePinDigit">
+                            <span style="font-size: 20px;">⌫</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Step 3: Confirm PIN -->
+        @if (currentStep == 3)
+        {
+            <div class="step-content">
+                <h3 class="step-title">Confirm Your PIN</h3>
+                <p class="step-description">Enter your PIN again to confirm</p>
+
+                <div class="pin-display">
+                    <div class="pin-dots">
+                        <div class="pin-dot @(confirmPin.Length >= 1 ? "filled" : "")"></div>
+                        <div class="pin-dot @(confirmPin.Length >= 2 ? "filled" : "")"></div>
+                        <div class="pin-dot @(confirmPin.Length >= 3 ? "filled" : "")"></div>
+                        <div class="pin-dot @(confirmPin.Length >= 4 ? "filled" : "")"></div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(confirmError))
+                {
+                    <div class="error-message">
+                        <span>⚠️</span> @confirmError
+                    </div>
+                }
+
+                <!-- Number Pad -->
+                <div class="number-pad">
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('1')">1</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('2')">2</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('3')">3</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('4')">4</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('5')">5</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('6')">6</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('7')">7</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('8')">8</button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('9')">9</button>
+                    </div>
+                    <div class="number-row">
+                        <button class="number-btn back-btn" @onclick="BackToPin">
+                            <span style="font-size: 16px;">← Back</span>
+                        </button>
+                        <button class="number-btn" @onclick="() => AddConfirmDigit('0')">0</button>
+                        <button class="number-btn delete-btn" @onclick="DeleteConfirmDigit">
+                            <span style="font-size: 20px;">⌫</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Success Message -->
+        @if (showSuccess)
+        {
+            <div class="success-overlay">
+                <div class="success-content">
+                    <div class="success-icon">✓</div>
+                    <h3>Setup Complete!</h3>
+                    <p>Redirecting to your journal...</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .setup-container {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .setup-card {
+        background: white;
+        border-radius: 24px;
+        padding: 40px 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 100%;
+        animation: slideUp 0.4s ease-out;
+        position: relative;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .setup-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .setup-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .setup-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+
+    .setup-subtitle {
+        font-size: 15px;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .progress-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 40px;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #d1d5db;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #9ca3af;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.active .step-circle {
+        border-color: #667eea;
+        background: #667eea;
+        color: white;
+    }
+
+    .progress-step.completed .step-circle {
+        border-color: #10b981;
+        background: #10b981;
+        color: white;
+    }
+
+    .step-label {
+        font-size: 12px;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    .progress-step.active .step-label {
+        color: #667eea;
+    }
+
+    .progress-line {
+        width: 50px;
+        height: 2px;
+        background: #d1d5db;
+        margin: 0 10px 20px;
+        transition: all 0.3s ease;
+    }
+
+        .progress-line.completed {
+            background: #10b981;
+        }
+
+    .step-content {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .step-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .step-description {
+        font-size: 14px;
+        color: #6b7280;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+    }
+
+    .setup-input {
+        width: 100%;
+        padding: 16px 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+        .setup-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+    .input-error {
+        color: #ef4444;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    .setup-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .setup-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .setup-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .pin-display {
+        margin-bottom: 30px;
+    }
+
+    .pin-dots {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .pin-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid #d1d5db;
+        transition: all 0.3s ease;
+    }
+
+        .pin-dot.filled {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+    .error-message {
+        text-align: center;
+        color: #ef4444;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 10px;
+        background: #fee2e2;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        animation: shake 0.4s ease;
+    }
+
+    @@keyframes shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+
+        25% {
+            transform: translateX(-10px);
+        }
+
+        75% {
+            transform: translateX(10px);
+        }
+    }
+
+    .number-pad {
+        margin-bottom: 20px;
+    }
+
+    .number-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .number-btn {
+        width: 100%;
+        height: 60px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 12px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #1f2937;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .number-btn:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .number-btn:active {
+            transform: scale(0.95);
+            background: #e5e7eb;
+        }
+
+        .number-btn.delete-btn {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #ef4444;
+        }
+
+            .number-btn.delete-btn:hover {
+                background: #fecaca;
+                border-color: #ef4444;
+            }
+
+        .number-btn.back-btn {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+            .number-btn.back-btn:hover {
+                background: #e5e7eb;
+                border-color: #9ca3af;
+            }
+
+    .success-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .success-content {
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 40px;
+        color: white;
+        animation: scaleIn 0.5s ease;
+    }
+
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+
+        to {
+            transform: scale(1);
+        }
+    }
+
+    .success-content h3 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+
+    .success-content p {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    @@media (max-width: 480px) {
+        .setup-card {
+            padding: 30px 20px;
+        }
+
+        .number-btn {
+            height: 55px;
+            font-size: 20px;
+        }
+
+        .step-title {
+            font-size: 20px;
+        }
+    }
+</style>
 
 @code {
+    private int currentStep = 1;
     private string username = "";
     private string pin = "";
+    private string confirmPin = "";
+    private string usernameError = "";
+    private string pinError = "";
+    private string confirmError = "";
+    private bool showSuccess = false;
 
-    private async Task Save()
+    protected override async Task OnInitializedAsync()
     {
-        if (pin.Length != 4) return;
+        // Check if already has PIN (coming from "Forgot PIN" link)
+        var existingPin = await Security.GetPinAsync();
+        if (!string.IsNullOrEmpty(existingPin))
+        {
+            // Clear existing security settings for reset
+            await Security.SetPinAsync("");
+            Security.SetUsername("");
+        }
+    }
 
-        Security.SaveUsername(username);
-        await Security.SavePinAsync(pin);
+    private void NextToPin()
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            usernameError = "Username is required";
+            return;
+        }
 
-        Nav.NavigateTo("/journal");
+        if (username.Length < 3)
+        {
+            usernameError = "Username must be at least 3 characters";
+            return;
+        }
+
+        usernameError = "";
+        currentStep = 2;
+    }
+
+    private void BackToUsername()
+    {
+        currentStep = 1;
+        pin = "";
+        pinError = "";
+    }
+
+    private void BackToPin()
+    {
+        currentStep = 2;
+        confirmPin = "";
+        confirmError = "";
+    }
+
+    private void AddPinDigit(char digit)
+    {
+        if (pin.Length < 4)
+        {
+            pin += digit;
+            pinError = "";
+
+            if (pin.Length == 4)
+            {
+                // Auto-advance to confirm step
+                _ = InvokeAsync(() =>
+                {
+                    currentStep = 3;
+                    StateHasChanged();
+                });
+            }
+        }
+    }
+
+    private void DeletePinDigit()
+    {
+        if (pin.Length > 0)
+        {
+            pin = pin.Substring(0, pin.Length - 1);
+            pinError = "";
+        }
+    }
+
+    private void AddConfirmDigit(char digit)
+    {
+        if (confirmPin.Length < 4)
+        {
+            confirmPin += digit;
+            confirmError = "";
+
+            if (confirmPin.Length == 4)
+            {
+                // Auto-submit when 4 digits entered
+                _ = InvokeAsync(async () => await CompleteSetup());
+            }
+        }
+    }
+
+    private void DeleteConfirmDigit()
+    {
+        if (confirmPin.Length > 0)
+        {
+            confirmPin = confirmPin.Substring(0, confirmPin.Length - 1);
+            confirmError = "";
+        }
+    }
+
+    private async Task CompleteSetup()
+    {
+        if (pin != confirmPin)
+        {
+            confirmError = "PINs do not match";
+            confirmPin = "";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        try
+        {
+            // Save username and PIN
+            Security.SetUsername(username);
+            await Security.SetPinAsync(pin);
+
+            // Set as authenticated
+            await Security.SetAuthenticatedAsync(true);
+
+            // Show success message
+            showSuccess = true;
+            await InvokeAsync(StateHasChanged);
+
+            // Wait 2 seconds then navigate
+            await Task.Delay(2000);
+            Nav.NavigateTo("/journal", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            confirmError = "Error saving credentials";
+            confirmPin = "";
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

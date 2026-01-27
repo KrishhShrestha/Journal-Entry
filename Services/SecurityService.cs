@@ -1,41 +1,89 @@
-﻿using System.Threading.Tasks;
-using Microsoft.Maui.Storage;
-
-
+﻿using Microsoft.Maui.Storage;
 
 namespace Journal_Entry.Services
 {
     public class SecurityService
     {
-        private const string PinKey = "user_pin";
-        private const string UsernameKey = "username";
+        private const string PIN_KEY = "userPin";
+        private const string USERNAME_KEY = "username";
+        private const string AUTH_KEY = "isAuthenticated";
 
-        // ---------- PIN ----------
-        public async Task SavePinAsync(string pin)
+        // Get PIN from SecureStorage
+        public async Task<string> GetPinAsync()
         {
-            await SecureStorage.SetAsync(PinKey, pin);
+            try
+            {
+                return await SecureStorage.GetAsync(PIN_KEY) ?? "";
+            }
+            catch
+            {
+                return "";
+            }
         }
 
-        public async Task<string?> GetPinAsync()
+        // Save PIN to SecureStorage
+        public async Task SetPinAsync(string pin)
         {
-            return await SecureStorage.GetAsync(PinKey);
+            try
+            {
+                await SecureStorage.SetAsync(PIN_KEY, pin);
+            }
+            catch (Exception ex)
+            {
+                // Handle error
+                Console.WriteLine($"Error saving PIN: {ex.Message}");
+            }
         }
 
+        // Check if PIN is set
         public async Task<bool> IsPinSetAsync()
         {
-            var pin = await GetPinAsync();
-            return !string.IsNullOrEmpty(pin);
+            try
+            {
+                var pin = await SecureStorage.GetAsync(PIN_KEY);
+                return !string.IsNullOrEmpty(pin);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        // ---------- USERNAME ----------
-        public void SaveUsername(string username)
-        {
-            Preferences.Set(UsernameKey, username);
-        }
-
+        // Get Username from Preferences
         public string GetUsername()
         {
-            return Preferences.Get(UsernameKey, string.Empty);
+            return Preferences.Get(USERNAME_KEY, "");
+        }
+
+        // Save Username to Preferences
+        public void SetUsername(string username)
+        {
+            Preferences.Set(USERNAME_KEY, username);
+        }
+
+        // Check if user is authenticated (in-memory flag)
+        private bool _isAuthenticated = false;
+
+        public async Task<bool> IsAuthenticatedAsync()
+        {
+            return _isAuthenticated;
+        }
+
+        public async Task SetAuthenticatedAsync(bool isAuthenticated)
+        {
+            _isAuthenticated = isAuthenticated;
+        }
+
+        // Clear authentication on app restart
+        public void ClearAuthentication()
+        {
+            _isAuthenticated = false;
+        }
+
+        // Check if PIN exists (alias for IsPinSetAsync)
+        public async Task<bool> HasPinAsync()
+        {
+            return await IsPinSetAsync();
         }
     }
 }

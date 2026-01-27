@@ -1,5 +1,9 @@
 ﻿@page "/dashboard"
 @using Journal_Entry.Models
+@using System.Globalization
+@using System.Linq
+@inject IJSRuntime JS
+
 @inject Journal_Entry.Services.DatabaseService Db
 
 <div class="container-fluid px-4 py-4">
@@ -8,160 +12,241 @@
         <small class="text-muted">Your journaling insights</small>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-primary bg-opacity-10 rounded-3 p-3">
-                            <span class="fs-4">📝</span>
-                        </div>
-                    </div>
-                    <h6 class="text-muted text-uppercase small mb-2">Total Entries</h6>
-                    <h2 class="fw-bold mb-0">@TotalEntries</h2>
+    <!-- Date Range Filter -->
+    <div class="card border-0 mb-4" style="border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div class="card-body p-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-2 fw-medium">From Date</label>
+                    <input type="date"
+                           class="form-control"
+                           style="border-radius: 10px; border: 1px solid #e5e7eb; padding: 0.625rem 0.875rem;"
+                           @bind-value="StartDate"
+                           @bind-value:event="oninput"
+                           @onchange="async () => await ApplyFilters()" />
                 </div>
-            </div>
-        </div>
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3">
-                            <span class="fs-4">🔥</span>
-                        </div>
-                    </div>
-                    <h6 class="text-muted text-uppercase small mb-2">Current Streak</h6>
-                    <h2 class="fw-bold mb-0">@CurrentStreak <small class="fs-6 text-muted">days</small></h2>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-2 fw-medium">To Date</label>
+                    <input type="date"
+                           class="form-control"
+                           style="border-radius: 10px; border: 1px solid #e5e7eb; padding: 0.625rem 0.875rem;"
+                           @bind-value="EndDate"
+                           @bind-value:event="oninput"
+                           @onchange="async () => await ApplyFilters()" />
                 </div>
-            </div>
-        </div>
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3">
-                            <span class="fs-4">🏆</span>
-                        </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-muted mb-2 fw-medium">Quick Filters</label>
+                    <div class="btn-group w-100" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-radius: 10px; overflow: hidden;">
+                        <button class="btn btn-outline-secondary"
+                                style="border: 1px solid #e5e7eb; font-size: 0.9rem;"
+                                @onclick="async () => await SetDateRange(7)">
+                            Last 7 Days
+                        </button>
+                        <button class="btn btn-outline-secondary"
+                                style="border: 1px solid #e5e7eb; font-size: 0.9rem;"
+                                @onclick="async () => await SetDateRange(30)">
+                            Last 30 Days
+                        </button>
+                        <button class="btn btn-outline-secondary"
+                                style="border: 1px solid #e5e7eb; font-size: 0.9rem;"
+                                @onclick="async () => await SetDateRange(90)">
+                            Last 90 Days
+                        </button>
+                        <button class="btn btn-outline-secondary"
+                                style="border: 1px solid #e5e7eb; font-size: 0.9rem;"
+                                @onclick="async () => await ResetFilters()">
+                            All Time
+                        </button>
                     </div>
-                    <h6 class="text-muted text-uppercase small mb-2">Longest Streak</h6>
-                    <h2 class="fw-bold mb-0">@LongestStreak <small class="fs-6 text-muted">days</small></h2>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3">
-                            <span class="fs-4">😊</span>
-                        </div>
-                    </div>
-                    <h6 class="text-muted text-uppercase small mb-2">Top Mood</h6>
-                    <h4 class="fw-bold mb-0">@MostFrequentMood</h4>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Content Sections -->
-    <div class="row g-4">
-        <!-- Mood Distribution -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">🎭 Mood Distribution</h5>
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            📝
+                        </div>
+                    </div>
+                    <h6 class="text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">Total Entries</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 2rem; color: #1f2937;">@TotalEntries</h2>
                 </div>
-                <div class="card-body px-4 pb-4">
-                    @if (MoodDistribution.Any())
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #fef3c7; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            🔥
+                        </div>
+                    </div>
+                    <h6 class="text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">Current Streak</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 2rem; color: #1f2937;">@CurrentStreak <span style="font-size: 1rem; color: #6b7280;">days</span></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            🏆
+                        </div>
+                    </div>
+                    <h6 class="text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">Longest Streak</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 2rem; color: #1f2937;">@LongestStreak <span style="font-size: 1rem; color: #6b7280;">days</span></h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #fce7f3; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            😊
+                        </div>
+                    </div>
+                    <h6 class="text-muted mb-2" style="font-size: 0.875rem; font-weight: 500;">Most Frequent Mood</h6>
+                    <h3 class="fw-bold mb-0" style="font-size: 1.5rem; color: #1f2937;">@MostFrequentMood</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   <!-- Mood Distribution Chart -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <span style="font-size: 24px; margin-right: 12px;">😊</span>
+                    <h5 class="fw-bold mb-0">Mood Distribution</h5>
+                </div>
+                @if (MoodDistribution.Any())
+                {
+                    <div style="max-width: 350px; margin: 0 auto;">
+                        <canvas id="moodPieChart" height="280"></canvas>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">No mood data available</p>
+                }
+            </div>
+        </div>
+    </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <span style="font-size: 24px; margin-right: 12px;">🏷️</span>
+                        <h5 class="fw-bold mb-0">Most Used Tags</h5>
+                    </div>
+                    @if (TagStats.Any())
                     {
-                        <div class="list-group list-group-flush">
-                            @foreach (var mood in MoodDistribution.OrderByDescending(m => m.Value).Take(6))
+                        @foreach (var tag in TagStats.OrderByDescending(t => t.Value).Take(10))
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge" style="background-color: #f3f4f6; color: #374151; font-weight: 500; padding: 0.5rem 0.875rem; border-radius: 8px; font-size: 0.875rem;">@tag.Key</span>
+                                    <span class="text-muted" style="font-size: 0.9rem;">@tag.Value times</span>
+                                </div>
+                                <div class="progress" style="height: 8px; border-radius: 6px; background-color: #f3f4f6;">
+                                    <div class="progress-bar"
+                                         style="width: @((tag.Value * 100.0 / TagStats.Values.Max()).ToString("F0"))%; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 6px;"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">No tags used yet</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Word Count Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <span style="font-size: 24px; margin-right: 12px;">📊</span>
+                        <h5 class="fw-bold mb-0">Word Count Stats</h5>
+                    </div>
+                    <div class="row text-center mb-4">
+                        <div class="col-6">
+                            <div style="padding: 1.5rem; border-radius: 16px; background-color: #f9fafb;">
+                                <h3 class="fw-bold mb-1" style="color: #3b82f6; font-size: 2rem;">@TotalWords</h3>
+                                <small class="text-muted" style="font-weight: 500;">Total Words</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="padding: 1.5rem; border-radius: 16px; background-color: #f9fafb;">
+                                <h3 class="fw-bold mb-1" style="color: #10b981; font-size: 2rem;">@AverageWordCount</h3>
+                                <small class="text-muted" style="font-weight: 500;">Avg per Entry</small>
+                            </div>
+                        </div>
+                    </div>
+                    @if (WordCountTrends.Any())
+                    {
+                        <h6 class="mb-3" style="font-weight: 600; color: #374151;">Recent Entries</h6>
+                        <div style="background-color: #f9fafb; border-radius: 12px; padding: 1rem;">
+                            @foreach (var trend in WordCountTrends.OrderByDescending(w => w.Key).Take(5))
                             {
-                                var percentage = (mood.Value * 100.0 / TotalEntries);
-                                <div class="list-group-item border-0 px-0 py-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="fw-medium">@mood.Key</span>
-                                        <span class="badge bg-primary rounded-pill">@mood.Value</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar" role="progressbar" style="width: @(percentage)%"></div>
-                                    </div>
+                                <div class="d-flex justify-content-between mb-2 pb-2" style="border-bottom: 1px solid #e5e7eb;">
+                                    <small style="font-weight: 500; color: #374151;">@trend.Key.ToString("MMM dd, yyyy")</small>
+                                    <small class="text-muted">@trend.Value words</small>
                                 </div>
                             }
                         </div>
                     }
-                    else
-                    {
-                        <p class="text-muted text-center py-4">No mood data yet</p>
-                    }
                 </div>
             </div>
         </div>
 
-        <!-- Tag Statistics -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">🏷️ Popular Tags</h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    @if (TagStats.Any())
+        <div class="col-lg-6">
+            <div class="card border-0 h-100" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <span style="font-size: 24px; margin-right: 12px;">📅</span>
+                        <h5 class="fw-bold mb-0">Missed Days</h5>
+                    </div>
+                    @if (MissedDays.Any())
                     {
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (var tag in TagStats.OrderByDescending(t => t.Value).Take(10))
+                        <p class="text-muted mb-3" style="font-size: 0.9rem;">Days without entries in selected range:</p>
+                        <div style="max-height: 240px; overflow-y: auto; background-color: #fef3c7; border-radius: 12px; padding: 1rem;">
+                            @foreach (var day in MissedDays.OrderByDescending(d => d).Take(20))
                             {
-                                <span class="badge bg-light text-dark border px-3 py-2">
-                                    @tag.Key <span class="badge bg-primary rounded-pill ms-1">@tag.Value</span>
-                                </span>
+                                <span class="badge me-2 mb-2" style="background-color: #fbbf24; color: #78350f; font-weight: 500; padding: 0.5rem 0.875rem; border-radius: 8px;">@day.ToString("MMM dd")</span>
                             }
                         </div>
+                        @if (MissedDays.Count > 20)
+                        {
+                            <small class="text-muted d-block mt-3">...and @(MissedDays.Count - 20) more</small>
+                        }
                     }
                     else
                     {
-                        <p class="text-muted text-center py-4">No tags yet</p>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- Word Count Trends -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold mb-0">📈 Recent Activity</h5>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    @if (WordCountTrends.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="border-0">Date</th>
-                                        <th class="border-0 text-end">Words</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var wc in WordCountTrends.OrderByDescending(w => w.Key).Take(8))
-                                    {
-                                        <tr>
-                                            <td>@wc.Key.ToString("MMM dd, yyyy")</td>
-                                            <td class="text-end">
-                                                <span class="badge bg-secondary rounded-pill">@wc.Value</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div style="background-color: #d1fae5; border-radius: 12px; padding: 2rem; text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+                            <p class="mb-0" style="color: #065f46; font-weight: 600;">No missed days!</p>
+                            <small style="color: #047857;">Great consistency!</small>
                         </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center py-4">No entries yet</p>
                     }
                 </div>
             </div>
@@ -170,150 +255,264 @@
 </div>
 
 <style>
-    .stat-card {
+    .card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
-    }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+        }
 
-    .stat-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .btn-outline-secondary:hover {
+        background-color: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
     }
 
     .progress-bar {
-        background: linear-gradient(90deg, #0d6efd 0%, #0a58ca 100%);
+        transition: width 0.6s ease;
     }
 
-    .card-header {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .badge.bg-light {
-        font-weight: 500;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: rgba(13, 110, 253, 0.05);
+    input[type="date"]:focus {
+        outline: none;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 </style>
 
 @code {
+    private DateTime? StartDate;
+    private DateTime? EndDate;
 
     private int TotalEntries;
     private int CurrentStreak;
     private int LongestStreak;
     private string MostFrequentMood = "N/A";
+    private int TotalWords;
+    private int AverageWordCount;
 
     private Dictionary<string, int> MoodDistribution = new();
     private Dictionary<string, int> TagStats = new();
     private Dictionary<DateTime, int> WordCountTrends = new();
+    private List<DateTime> MissedDays = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var entries = Db.GetAllEntries();
-
-        TotalEntries = entries.Count;
-
-        CalculateStreaks(entries);
-        CalculateMoodDistribution(entries);
-        CalculateTagStats(entries);
-        CalculateWordCounts(entries);
+        await ResetFilters();
     }
 
-    private void CalculateStreaks(List<JournalEntry> entries)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!entries.Any())
+        if (MoodDistribution.Any())
+        {
+            await RenderMoodChart();
+        }
+    }
+
+    private async Task SetDateRange(int days)
+    {
+        EndDate = DateTime.Today;
+        StartDate = DateTime.Today.AddDays(-days);
+        await ApplyFilters();
+    }
+
+    private async Task ResetFilters()
+    {
+        StartDate = null;
+        EndDate = null;
+        await ApplyFilters();
+    }
+
+    private void CalculateStreaks(List<JournalEntry> allEntries)
+    {
+        if (!allEntries.Any())
         {
             CurrentStreak = 0;
             LongestStreak = 0;
             return;
         }
 
-        var dates = entries
+        var dates = allEntries
             .Select(e => e.EntryDate.Date)
             .Distinct()
             .OrderByDescending(d => d)
             .ToList();
 
-        int current = 0;
-        for (int i = 0; i < dates.Count; i++)
+        // Current streak
+        CurrentStreak = 1;
+        for (int i = 0; i < dates.Count - 1; i++)
         {
-            if (dates[i] == DateTime.Today.AddDays(-i))
-                current++;
+            if ((dates[i] - dates[i + 1]).Days == 1)
+                CurrentStreak++;
             else
                 break;
         }
 
-        CurrentStreak = current;
+        // Longest streak
+        int tempStreak = 1;
+        LongestStreak = 1;
 
-        int longest = 1, temp = 1;
-        for (int i = 1; i < dates.Count; i++)
+        for (int i = 0; i < dates.Count - 1; i++)
         {
-            if (dates[i - 1] == dates[i].AddDays(1))
+            if ((dates[i] - dates[i + 1]).Days == 1)
             {
-                temp++;
-                longest = Math.Max(longest, temp);
+                tempStreak++;
+                LongestStreak = Math.Max(LongestStreak, tempStreak);
             }
             else
             {
-                temp = 1;
+                tempStreak = 1;
             }
         }
-
-        LongestStreak = longest;
     }
 
     private void CalculateMoodDistribution(List<JournalEntry> entries)
     {
+        MoodDistribution.Clear();
+
+        if (!entries.Any())
+        {
+            MostFrequentMood = "N/A";
+            return;
+        }
+
         MoodDistribution = entries
-            .Where(e => !string.IsNullOrEmpty(e.PrimaryMood))
+            .Where(e => !string.IsNullOrWhiteSpace(e.PrimaryMood))
             .GroupBy(e => e.PrimaryMood)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        if (MoodDistribution.Any())
-        {
-            MostFrequentMood = MoodDistribution
-                .OrderByDescending(m => m.Value)
-                .First().Key;
-        }
+        MostFrequentMood = MoodDistribution
+            .OrderByDescending(m => m.Value)
+            .First().Key;
     }
 
     private void CalculateTagStats(List<JournalEntry> entries)
     {
-        var tags = new List<string>();
+        TagStats.Clear();
 
         foreach (var entry in entries)
         {
-            if (!string.IsNullOrWhiteSpace(entry.Tags))
+            if (string.IsNullOrWhiteSpace(entry.Tags))
+                continue;
+
+            var tags = entry.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var tag in tags)
             {
-                tags.AddRange(
-                    entry.Tags
-                        .Split(',')
-                        .Select(t => t.Trim())
-                        .Where(t => t.Length > 0)
-                );
+                var cleanTag = tag.Trim().ToLower();
+
+                if (TagStats.ContainsKey(cleanTag))
+                    TagStats[cleanTag]++;
+                else
+                    TagStats[cleanTag] = 1;
             }
         }
-
-        TagStats = tags
-            .GroupBy(t => t)
-            .ToDictionary(g => g.Key, g => g.Count());
     }
 
     private void CalculateWordCounts(List<JournalEntry> entries)
     {
-        WordCountTrends = entries
-            .OrderBy(e => e.EntryDate)
-            .ToDictionary(
-                e => e.EntryDate,
-                e => string.IsNullOrWhiteSpace(e.Content)
-                        ? 0
-                        : e.Content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length
+        TotalWords = 0;
+        WordCountTrends.Clear();
+
+        foreach (var entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Content))
+                continue;
+
+            int wordCount = entry.Content
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Length;
+
+            TotalWords += wordCount;
+
+            var date = entry.EntryDate.Date;
+            if (WordCountTrends.ContainsKey(date))
+                WordCountTrends[date] += wordCount;
+            else
+                WordCountTrends[date] = wordCount;
+        }
+
+        AverageWordCount = entries.Count > 0
+            ? TotalWords / entries.Count
+            : 0;
+    }
+
+    private void CalculateMissedDays(List<JournalEntry> entries)
+    {
+        MissedDays.Clear();
+
+        DateTime rangeStart;
+        DateTime rangeEnd;
+
+        if (StartDate.HasValue && EndDate.HasValue)
+        {
+            rangeStart = StartDate.Value.Date;
+            rangeEnd = EndDate.Value.Date;
+        }
+        else if (entries.Any())
+        {
+            var dates = entries.Select(e => e.EntryDate.Date).OrderBy(d => d).ToList();
+            rangeStart = dates.First();
+            rangeEnd = dates.Last();
+        }
+        else
+        {
+            return;
+        }
+
+        var datesWithEntries = entries
+            .Select(e => e.EntryDate.Date)
+            .Distinct()
+            .ToHashSet();
+
+        for (var date = rangeStart; date <= rangeEnd; date = date.AddDays(1))
+        {
+            if (!datesWithEntries.Contains(date))
+            {
+                MissedDays.Add(date);
+            }
+        }
+    }
+
+    private async Task RenderMoodChart()
+    {
+        if (!MoodDistribution.Any())
+            return;
+
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "renderMoodPieChart",
+                MoodDistribution.Keys.ToArray(),
+                MoodDistribution.Values.ToArray()
             );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering chart: {ex.Message}");
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        var allEntries = Db.GetAllEntries().ToList();
+
+        var filteredEntries = allEntries.Where(e =>
+        {
+            var d = e.EntryDate.Date;
+            return (!StartDate.HasValue || d >= StartDate.Value.Date)
+                && (!EndDate.HasValue || d <= EndDate.Value.Date);
+        }).ToList();
+
+        TotalEntries = filteredEntries.Count;
+
+        CalculateStreaks(allEntries);
+        CalculateMoodDistribution(filteredEntries);
+        CalculateTagStats(filteredEntries);
+        CalculateWordCounts(filteredEntries);
+        CalculateMissedDays(filteredEntries);
+
+        StateHasChanged();
     }
 }

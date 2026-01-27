@@ -3,12 +3,10 @@
 @using Journal_Entry.Services
 @inject SecurityService Security
 
-
 <div class="app-shell">
     <aside class="sidebar">
         <NavMenu />
     </aside>
-
     <main class="main-content">
         @Body
     </main>
@@ -18,16 +16,21 @@
     protected override async Task OnInitializedAsync()
     {
         var isPinSet = await Security.IsPinSetAsync();
+        var isAuthenticated = await Security.IsAuthenticatedAsync();
         var currentUri = Nav.ToBaseRelativePath(Nav.Uri);
 
-        if (isPinSet && !currentUri.StartsWith("lock"))
-        {
-            Nav.NavigateTo("/lock", true);
-        }
-
+        // If no PIN is set, redirect to setup
         if (!isPinSet && !currentUri.StartsWith("setup"))
         {
             Nav.NavigateTo("/setup", true);
+            return;
+        }
+
+        // If PIN is set but not authenticated, redirect to lock
+        if (isPinSet && !isAuthenticated && !currentUri.StartsWith("lock") && !currentUri.StartsWith("setup"))
+        {
+            Nav.NavigateTo("/lock", true);
+            return;
         }
     }
 }

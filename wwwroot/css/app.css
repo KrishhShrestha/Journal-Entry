@@ -125,4 +125,206 @@ h1:focus {
         font-weight: 600;
     }
 
+/* Navbar Container - Sticky positioning */
+.navbar-container {
+    position: sticky;
+    top: 20px;
+    z-index: 1000;
+    padding: 0 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Modern Navbar */
+.modern-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+    .modern-navbar:hover {
+        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12);
+    }
+
+/* Brand Section */
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #800080;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+    .navbar-brand:hover {
+        transform: scale(1.02);
+    }
+
+.brand-icon {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.brand-text {
+    white-space: nowrap;
+}
+
+/* Navigation Links */
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.nav-item {
+    position: relative;
+    color: #4a5568;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+
+    .nav-item::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: #800080;
+        transition: width 0.3s ease;
+    }
+
+    .nav-item:hover {
+        color: #800080;
+    }
+
+        .nav-item:hover::after {
+            width: 100%;
+        }
+
+    .nav-item.active {
+        color: #800080;
+        font-weight: 600;
+    }
+
+        .nav-item.active::after {
+            width: 100%;
+        }
+
+/* CTA Button */
+.navbar-cta {
+    display: flex;
+    align-items: center;
+}
+
+.cta-button {
+    background: #0a5f3a;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.75rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px rgba(10, 95, 58, 0.2);
+}
+
+    .cta-button:hover {
+        background: #800080;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(10, 95, 58, 0.3);
+    }
+
+    .cta-button:active {
+        transform: translateY(0);
+    }
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .navbar-links {
+        gap: 1.5rem;
+    }
+
+    .modern-navbar {
+        padding: 1rem 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar-container {
+        padding: 0 1rem;
+        top: 10px;
+    }
+
+    .modern-navbar {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.5rem 1.5rem;
+        border-radius: 30px;
+    }
+
+    .navbar-links {
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .nav-item {
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem 0;
+    }
+
+    .navbar-brand {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .navbar-cta {
+        width: 100%;
+    }
+
+    .cta-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-text {
+        font-size: 0.95rem;
+    }
+
+    .nav-item {
+        font-size: 0.9rem;
+    }
+
+    .cta-button {
+        font-size: 0.9rem;
+        padding: 0.65rem 1.5rem;
+    }
+}
+
+/* Optional: Scrolled State Animation */
+.navbar-container.scrolled .modern-navbar {
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
+}
+
 

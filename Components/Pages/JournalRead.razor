@@ -1,6 +1,5 @@
 ﻿@page "/journal/{Id:int}"
-@using Journal_Entry.Models;
-
+@using Journal_Entry.Models
 @inject Journal_Entry.Services.DatabaseService DB
 @inject NavigationManager Nav
 
@@ -11,23 +10,43 @@
 else
 {
     <div class="container mt-4">
-        <div class="card shadow">
+        <div class="card shadow-lg border-0">
             <div class="card-header bg-dark text-white">
-                <h4>@Entry.Title</h4>
+                <h4 class="mb-0">@Entry.Title</h4>
             </div>
+
             <div class="card-body">
                 <p><strong>Date:</strong> @Entry.EntryDate.ToShortDateString()</p>
                 <p><strong>Mood:</strong> @Entry.PrimaryMood</p>
                 <p><strong>Tags:</strong> @Entry.Tags</p>
+
                 <hr />
-                <p>@Entry.Content</p>
+
+                <!-- ✅ Render Rich Text Properly -->
+                <div class="journal-content">
+                    @((MarkupString)Entry.Content)
+                </div>
             </div>
-            <div class="card-footer">
-                <button class="btn btn-secondary" @onclick="GoBack">Back</button>
+
+            <div class="card-footer text-end">
+                <button class="btn btn-secondary" @onclick="GoBack">
+                    ⬅ Back
+                </button>
             </div>
         </div>
     </div>
 }
+
+<style>
+    .journal-content {
+        line-height: 1.8;
+        font-size: 1rem;
+    }
+
+        .journal-content p {
+            margin-bottom: 1rem;
+        }
+</style>
 
 @code {
     [Parameter]
@@ -46,4 +65,3 @@ else
         Nav.NavigateTo("/journals");
     }
 }
-
