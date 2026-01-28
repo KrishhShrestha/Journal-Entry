@@ -1,0 +1,350 @@
+﻿@page "/calendar"
+@using Journal_Entry.Models
+@using Journal_Entry.Services
+@inject DatabaseService DB
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">📅 Journal Calendar</h2>
+        <small class="text-muted">Click on any date to view entries</small>
+    </div>
+
+    <!-- Calendar Navigation -->
+    <div class="card border-0 mb-4" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <button class="btn btn-outline-primary" style="border-radius: 12px;" @onclick="PreviousMonth">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+
+                <h3 class="mb-0 fw-bold">@CurrentDate.ToString("MMMM yyyy")</h3>
+
+                <button class="btn btn-outline-primary" style="border-radius: 12px;" @onclick="NextMonth">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2 mb-3">
+                <button class="btn btn-sm btn-secondary" @onclick="GoToToday">
+                    Today
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="GoToCurrentMonth">
+                    This Month
+                </button>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="calendar-container">
+                <!-- Day Headers -->
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+
+                    <!-- Calendar Days -->
+                    @foreach (var day in CalendarDays)
+                    {
+                        <div class="calendar-day @GetDayClasses(day)"
+                             @onclick="() => SelectDate(day)">
+                            <div class="day-number">@day.Day</div>
+
+                            @if (day.Month == CurrentDate.Month && EntriesPerDay.ContainsKey(day.Date))
+                            {
+                                <div class="entry-indicators">
+                                    @for (int i = 0; i < Math.Min(EntriesPerDay[day.Date], 3); i++)
+                                    {
+                                        <span class="entry-dot"></span>
+                                    }
+                                    @if (EntriesPerDay[day.Date] > 3)
+                                    {
+                                        <span class="entry-count">+@(EntriesPerDay[day.Date] - 3)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Date Entries -->
+    @if (SelectedDate.HasValue)
+    {
+        <div class="card border-0" style="border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">
+                        Entries for @SelectedDate.Value.ToString("dddd, MMMM dd, yyyy")
+                    </h4>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearSelection">
+                        <i class="bi bi-x"></i> Close
+                    </button>
+                </div>
+
+                @if (SelectedDateEntries.Any())
+                {
+                    <div class="row g-3">
+                        @foreach (var entry in SelectedDateEntries)
+                        {
+                            <div class="col-md-6">
+                                <div class="entry-card" @onclick="() => ViewEntry(entry.Id)">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="mb-0">@entry.Title</h5>
+                                        <span class="badge" style="background-color: #673AB7; color: white;">
+                                            @entry.PrimaryMood
+                                        </span>
+                                    </div>
+
+                                    <div class="entry-preview mb-3">
+                                        @((MarkupString)GetPreview(entry.Content))
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(entry.Tags))
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var tag in entry.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(3))
+                                            {
+                                                <span class="tag-badge">@tag.Trim()</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="mt-3 text-end">
+                                        <button class="btn btn-sm btn-primary">
+                                            View Full Entry <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-journal-x" style="font-size: 3rem; color: var(--text-muted);"></i>
+                        <p class="text-muted mt-3 mb-0">No entries for this date</p>
+                        @if (SelectedDate.Value.Date == DateTime.Today)
+                        {
+                            <button class="btn btn-primary mt-3" @onclick="CreateNewEntry">
+                                <i class="bi bi-plus-circle"></i> Create Entry
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Monthly Statistics -->
+    <div class="row g-4 mt-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-value">@MonthlyStats.TotalEntries</div>
+                <div class="stat-label">Entries This Month</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value">@MonthlyStats.DaysWithEntries</div>
+                <div class="stat-label">Days Active</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">😊</div>
+                <div class="stat-value">@MonthlyStats.TopMood</div>
+                <div class="stat-label">Most Frequent Mood</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    List<JournalEntry> AllEntries = new();
+    DateTime CurrentDate = DateTime.Today;
+    DateTime? SelectedDate = null;
+
+    List<DateTime> CalendarDays = new();
+    Dictionary<DateTime, int> EntriesPerDay = new();
+
+    List<JournalEntry> SelectedDateEntries => SelectedDate.HasValue
+        ? AllEntries.Where(e => e.EntryDate.Date == SelectedDate.Value.Date).ToList()
+        : new();
+
+    class MonthStats
+    {
+        public int TotalEntries { get; set; }
+        public int DaysWithEntries { get; set; }
+        public string TopMood { get; set; } = "N/A";
+    }
+
+    MonthStats MonthlyStats = new();
+
+    protected override void OnInitialized()
+    {
+        AllEntries = DB.GetAllEntries();
+        GenerateCalendar();
+        CalculateMonthlyStats();
+    }
+
+    void GenerateCalendar()
+    {
+        CalendarDays.Clear();
+        EntriesPerDay.Clear();
+
+        var firstDayOfMonth = new DateTime(CurrentDate.Year, CurrentDate.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+        // Start from the Sunday before the first day
+        var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+        // End on the Saturday after the last day
+        var endDate = lastDayOfMonth.AddDays(6 - (int)lastDayOfMonth.DayOfWeek);
+
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            CalendarDays.Add(date);
+        }
+
+        // Count entries per day
+        foreach (var entry in AllEntries)
+        {
+            var date = entry.EntryDate.Date;
+            if (EntriesPerDay.ContainsKey(date))
+                EntriesPerDay[date]++;
+            else
+                EntriesPerDay[date] = 1;
+        }
+    }
+
+    void CalculateMonthlyStats()
+    {
+        var monthEntries = AllEntries.Where(e =>
+            e.EntryDate.Year == CurrentDate.Year &&
+            e.EntryDate.Month == CurrentDate.Month
+        ).ToList();
+
+        MonthlyStats.TotalEntries = monthEntries.Count;
+        MonthlyStats.DaysWithEntries = monthEntries
+            .Select(e => e.EntryDate.Date)
+            .Distinct()
+            .Count();
+
+        if (monthEntries.Any() && monthEntries.Any(e => !string.IsNullOrWhiteSpace(e.PrimaryMood)))
+        {
+            MonthlyStats.TopMood = monthEntries
+                .Where(e => !string.IsNullOrWhiteSpace(e.PrimaryMood))
+                .GroupBy(e => e.PrimaryMood)
+                .OrderByDescending(g => g.Count())
+                .First()
+                .Key;
+        }
+        else
+        {
+            MonthlyStats.TopMood = "N/A";
+        }
+    }
+
+    string GetDayClasses(DateTime day)
+    {
+        var classes = new List<string>();
+
+        if (day.Month != CurrentDate.Month)
+            classes.Add("other-month");
+
+        if (day.Date == DateTime.Today)
+            classes.Add("today");
+
+        if (SelectedDate.HasValue && day.Date == SelectedDate.Value.Date)
+            classes.Add("selected");
+
+        if (day.Month == CurrentDate.Month && EntriesPerDay.ContainsKey(day.Date))
+            classes.Add("has-entries");
+
+        return string.Join(" ", classes);
+    }
+
+    void SelectDate(DateTime date)
+    {
+        if (date.Month != CurrentDate.Month)
+        {
+            CurrentDate = date;
+            GenerateCalendar();
+            CalculateMonthlyStats();
+        }
+
+        SelectedDate = date.Date;
+        StateHasChanged();
+    }
+
+    void ClearSelection()
+    {
+        SelectedDate = null;
+    }
+
+    void PreviousMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(-1);
+        GenerateCalendar();
+        CalculateMonthlyStats();
+        SelectedDate = null;
+    }
+
+    void NextMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(1);
+        GenerateCalendar();
+        CalculateMonthlyStats();
+        SelectedDate = null;
+    }
+
+    void GoToToday()
+    {
+        CurrentDate = DateTime.Today;
+        SelectedDate = DateTime.Today;
+        GenerateCalendar();
+        CalculateMonthlyStats();
+    }
+
+    void GoToCurrentMonth()
+    {
+        CurrentDate = DateTime.Today;
+        GenerateCalendar();
+        CalculateMonthlyStats();
+        SelectedDate = null;
+    }
+
+    void ViewEntry(int id)
+    {
+        Nav.NavigateTo($"/journal/{id}");
+    }
+
+    void CreateNewEntry()
+    {
+        Nav.NavigateTo("/journal");
+    }
+
+    string GetPreview(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return "No content";
+
+        // Remove HTML tags
+        var text = System.Text.RegularExpressions.Regex.Replace(content, "<.*?>", string.Empty);
+
+        if (text.Length > 150)
+            return text.Substring(0, 150) + "...";
+
+        return text;
+    }
+}

@@ -1,5 +1,4 @@
-﻿
-html, body {
+﻿html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -85,7 +84,7 @@ h1:focus {
     .flex-column, .navbar-brand {
         padding-left: env(safe-area-inset-left);
     }
-    /* Add/Update Sidebar styles */
+    /* Fixing sidebar colors to match the theme */
     .sidebar {
         background-color: var(--bg-card) !important;
         border-right: 1px solid var(--border-color) !important;
@@ -99,6 +98,7 @@ h1:focus {
         }
     }
 }
+
 .app-navbar {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
@@ -126,7 +126,7 @@ h1:focus {
         font-weight: 600;
     }
 
-/* Navbar Container - Sticky positioning */
+/* Sticky navbar that follows you down the page */
 .navbar-container {
     position: sticky;
     top: 20px;
@@ -135,7 +135,7 @@ h1:focus {
     margin-bottom: 2rem;
 }
 
-/* Modern Navbar */
+/* The fancy pill-shaped navbar we're using now */
 .modern-navbar {
     display: flex;
     align-items: center;
@@ -153,7 +153,7 @@ h1:focus {
         box-shadow: 0 6px 30px rgba(0, 0, 0, 0.12);
     }
 
-/* Brand Section */
+/* Logo and brand stuff on the left */
 .navbar-brand {
     display: flex;
     align-items: center;
@@ -179,7 +179,7 @@ h1:focus {
     white-space: nowrap;
 }
 
-/* Navigation Links */
+/* Main navigation links in the middle */
 .navbar-links {
     display: flex;
     align-items: center;
@@ -227,7 +227,7 @@ h1:focus {
             width: 100%;
         }
 
-/* CTA Button */
+/* Call-to-action button on the right */
 .navbar-cta {
     display: flex;
     align-items: center;
@@ -257,7 +257,7 @@ h1:focus {
         transform: translateY(0);
     }
 
-/* Responsive Design */
+/* Making it look good on tablets */
 @media (max-width: 1024px) {
     .navbar-links {
         gap: 1.5rem;
@@ -322,7 +322,7 @@ h1:focus {
     }
 }
 
-/* Optional: Scrolled State Animation */
+/* Shrinks a bit when you scroll - looks cleaner */
 .navbar-container.scrolled .modern-navbar {
     padding: 0.75rem 1.5rem;
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
@@ -330,12 +330,9 @@ h1:focus {
 
 
 
-/* ============================================
-   THEME-AWARE STYLES FOR DARK/LIGHT MODE
-   Add this to your wwwroot/css/app.css
-   ============================================ */
+/* Dark mode variables and theming - took forever to get right */
 
-/* CSS Variables for Light Mode (Default) */
+/* Default light mode colors */
 :root {
     --text-primary: #1f2937;
     --text-secondary: #6b7280;
@@ -350,7 +347,7 @@ h1:focus {
     --input-border: #e5e7eb;
 }
 
-/* CSS Variables for Dark Mode */
+/* Dark mode - switched these when MudBlazor theme is dark */
 [data-mud-theme="dark"] {
     --text-primary: #f3f4f6;
     --text-secondary: #d1d5db;
@@ -365,11 +362,9 @@ h1:focus {
     --input-border: #404040;
 }
 
-/* ============================================
-   OVERRIDE BOOTSTRAP CLASSES TO BE THEME-AWARE
-   ============================================ */
+/* Making Bootstrap play nice with our theme variables */
 
-/* Text Colors */
+/* Text color overrides */
 .text-dark {
     color: var(--text-primary) !important;
 }
@@ -378,7 +373,7 @@ h1:focus {
     color: var(--text-muted) !important;
 }
 
-/* Card Backgrounds */
+/* Cards should respect the theme */
 .card {
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
@@ -400,7 +395,7 @@ h1:focus {
     border-color: var(--border-color) !important;
 }
 
-/* Form Controls */
+/* Form inputs with proper dark mode */
 .form-control,
 .form-select {
     background-color: var(--input-bg) !important;
@@ -419,7 +414,7 @@ h1:focus {
     color: var(--text-secondary) !important;
 }
 
-/* Tables */
+/* Tables with theme support */
 .table {
     color: var(--text-primary) !important;
 }
@@ -448,26 +443,24 @@ h1:focus {
     color: var(--text-primary) !important;
 }
 
-/* Progress Bars */
+/* Progress bars */
 .progress {
     background-color: var(--bg-secondary) !important;
 }
 
-/* Small Text */
+/* Small text needs theming too */
 small {
     color: var(--text-muted) !important;
 }
 
-/* ============================================
-   CUSTOM COMPONENT STYLES (DASHBOARD, ETC.)
-   ============================================ */
+/* Custom components that use our theme variables */
 
-/* Dashboard Container */
+/* Dashboard main wrapper */
 .container-fluid {
     background-color: transparent !important;
 }
 
-/* Dashboard Headers */
+/* All the heading tags */
 h2.fw-bold,
 h3.fw-bold,
 h4.fw-bold,
@@ -476,12 +469,12 @@ h6 {
     color: var(--text-primary) !important;
 }
 
-/* Dashboard Cards - Override Inline Styles */
+/* Had to override inline styles from components - annoying but works */
 .card[style*="background"] {
     background: var(--bg-card) !important;
 }
 
-/* Stats Card Text */
+/* Stats cards text styling */
 .card-body h2,
 .card-body h3,
 .card-body h6 {
@@ -492,7 +485,7 @@ h6 {
     color: var(--text-secondary) !important;
 }
 
-/* Button Groups */
+/* Button groups */
 .btn-group .btn-outline-secondary {
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
@@ -504,24 +497,22 @@ h6 {
         color: var(--text-primary) !important;
     }
 
-/* Input Modern Style Override */
+/* Custom input styling we added */
 .input-modern {
     background-color: var(--input-bg) !important;
     color: var(--text-primary) !important;
     border-color: var(--input-border) !important;
 }
 
-/* ============================================
-   JOURNAL SPECIFIC STYLES
-   ============================================ */
+/* Journal page specific stuff */
 
-/* Journal Container (Purple Gradient) - Keep as is, but adjust text */
+/* Purple gradient header - keep text white here */
 .journal-container h1,
 .journal-container .date-display {
-    color: white !important; /* Keep white on purple background */
+    color: white !important;
 }
 
-/* Journal Card */
+/* Journal entry cards */
 .journal-card {
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
@@ -535,7 +526,7 @@ h6 {
     color: var(--text-secondary) !important;
 }
 
-/* Mood Selector */
+/* Mood selector buttons */
 .mood {
     background-color: var(--bg-card) !important;
     border-color: var(--border-color) !important;
@@ -548,29 +539,27 @@ h6 {
         border-color: #673AB7 !important;
     }
 
-/* Entry Content */
+/* Journal text content areas */
 .entry-content,
 .journal-content {
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
 }
 
-/* ============================================
-   HOME PAGE STYLES
-   ============================================ */
+/* Home page specific styles */
 
-/* Hero Section Text - Keep white on gradient */
+/* Hero section stays white on gradient */
 .bg-gradient-to-br h1,
 .bg-gradient-to-br p {
     color: white !important;
 }
 
-/* Recent Entries Cards */
+/* Recent entries section */
 .bg-white {
     background-color: var(--bg-card) !important;
 }
 
-/* Grid Cards Text */
+/* Grid layout cards */
 div[class*="grid"] .bg-white h5 {
     color: var(--text-primary) !important;
 }
@@ -579,9 +568,7 @@ div[class*="grid"] .bg-white div {
     color: var(--text-secondary) !important;
 }
 
-/* ============================================
-   NAVBAR STYLES - THEME AWARE
-   ============================================ */
+/* Navbar theme support */
 
 .modern-navbar {
     background-color: var(--bg-card) !important;
@@ -600,11 +587,9 @@ div[class*="grid"] .bg-white div {
     color: #800080 !important;
 }
 
-/* ============================================
-   TAILWIND-LIKE UTILITY OVERRIDES
-   ============================================ */
+/* Tailwind-style utility classes with theme support */
 
-/* Text Colors */
+/* Gray scale text colors */
 .text-gray-800,
 .text-gray-900 {
     color: var(--text-primary) !important;
@@ -620,7 +605,7 @@ div[class*="grid"] .bg-white div {
     color: var(--text-muted) !important;
 }
 
-/* Background Colors */
+/* Background utilities */
 .bg-white {
     background-color: var(--bg-card) !important;
 }
@@ -630,9 +615,7 @@ div[class*="grid"] .bg-white div {
     background-color: var(--bg-secondary) !important;
 }
 
-/* ============================================
-   RICH TEXT EDITOR CONTENT
-   ============================================ */
+/* Rich text editor content */
 
 .preview-content,
 .preview-content p,
@@ -641,9 +624,7 @@ div[class*="grid"] .bg-white div {
     color: var(--text-primary) !important;
 }
 
-/* ============================================
-   PAGINATION
-   ============================================ */
+/* Pagination controls */
 
 .pagination .page-link {
     background-color: var(--bg-card) !important;
@@ -667,17 +648,15 @@ div[class*="grid"] .bg-white div {
     color: var(--text-muted) !important;
 }
 
-/* ============================================
-   SPECIAL FIXES FOR INLINE STYLES
-   ============================================ */
+/* Fighting with inline styles from components */
 
-/* Override inline background colors */
+/* Override those pesky inline backgrounds */
 [style*="background-color: #f9fafb"],
 [style*="background-color: #f3f4f6"] {
     background-color: var(--bg-secondary) !important;
 }
 
-/* Override inline text colors */
+/* Override inline text colors too */
 [style*="color: #1f2937"],
 [style*="color: #374151"] {
     color: var(--text-primary) !important;
@@ -688,66 +667,295 @@ div[class*="grid"] .bg-white div {
     color: var(--text-secondary) !important;
 }
 
-/* ============================================
-   GENERAL IMPROVEMENTS
-   ============================================ */
+/* General theme improvements */
 
-/* Ensure all headings use theme colors */
+/* All headings should use theme colors */
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary) !important;
 }
 
-/* Ensure all paragraphs use theme colors */
+/* Paragraphs too */
 p {
     color: var(--text-primary) !important;
 }
 
-/* Ensure all labels use theme colors */
+/* Form labels */
 label {
     color: var(--text-secondary) !important;
 }
 
-/* Body background */
+/* Body element */
 body {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
 }
 
-/* Main container */
+/* Main content container */
 .app-shell .main-content {
     background-color: var(--bg-primary) !important;
 }
 
 
-/* ============================================
-   ADDITIONAL DARK MODE BACKGROUND FIX
-   ============================================ */
+/* Fix for dark mode having white backgrounds leak through */
 
-/* Force the entire page background to match theme */
+/* Make sure the whole page uses theme background */
 html, body {
     background-color: var(--bg-primary) !important;
     min-height: 100vh;
 }
 
-/* Ensure the app shell fills the screen */
+/* App shell needs full height */
 .app-shell {
     min-height: 100vh;
     background-color: var(--bg-primary) !important;
 }
 
-/* Main content area should also have dark background */
+/* Main content area */
 .main-content {
     background-color: var(--bg-primary) !important;
     min-height: 100vh;
 }
 
-/* Container adjustments */
+/* Container backgrounds should be transparent */
 .container,
 .max-w-7xl {
     background-color: transparent !important;
 }
 
-/* Ensure no white backgrounds leak through */
+/* No white backgrounds sneaking in */
 .mx-auto {
     background-color: transparent !important;
+}
+
+
+
+/* Calendar component styling */
+
+.calendar-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    padding: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: var(--bg-card);
+    position: relative;
+    min-height: 60px;
+    max-height: 80px;
+}
+
+    .calendar-day:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(103, 58, 183, 0.2);
+        border-color: #673AB7;
+    }
+
+    .calendar-day.other-month {
+        opacity: 0.3;
+    }
+
+    .calendar-day.today {
+        border-color: #673AB7;
+        border-width: 2px;
+        background: linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(103, 58, 183, 0.05) 100%);
+    }
+
+    .calendar-day.selected {
+        background-color: #673AB7 !important;
+        border-color: #673AB7;
+        color: white !important;
+    }
+
+        .calendar-day.selected .day-number {
+            color: white !important;
+        }
+
+    .calendar-day.has-entries {
+        border-color: #10b981;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+    }
+
+.day-number {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.entry-indicators {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    margin-top: auto;
+}
+
+.entry-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #673AB7;
+}
+
+.calendar-day.selected .entry-dot {
+    background-color: white;
+}
+
+.entry-count {
+    font-size: 0.65rem;
+    color: #673AB7;
+    font-weight: 600;
+    margin-left: 2px;
+}
+
+.calendar-day.selected .entry-count {
+    color: white;
+}
+
+.entry-card {
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    height: 100%;
+}
+
+    .entry-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border-color: #673AB7;
+    }
+
+.entry-preview {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    max-height: 4.8em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.tag-badge {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.stat-card {
+    background-color: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Mobile calendar adjustments */
+@media (max-width: 768px) {
+    .calendar-container {
+        max-width: 100%;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .calendar-day {
+        min-height: 50px;
+        max-height: 65px;
+        padding: 4px;
+    }
+
+    .calendar-day-header {
+        padding: 6px;
+        font-size: 0.75rem;
+    }
+
+    .day-number {
+        font-size: 0.85rem;
+    }
+
+    .entry-dot {
+        width: 4px;
+        height: 4px;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+    }
+
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Search result highlighting */
+
+.highlight {
+    background-color: #fbbf24;
+    color: #78350f;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+[data-mud-theme="dark"] .highlight {
+    background-color: #f59e0b;
+    color: #1f2937;
 }
