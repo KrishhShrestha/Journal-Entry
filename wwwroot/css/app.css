@@ -959,3 +959,30 @@ html, body {
     background-color: #f59e0b;
     color: #1f2937;
 }
+
+
+/* Table Dark Header - Theme Aware */
+.table-dark {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+    .table-dark th {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+
+/* Alternative: Use a custom class instead of table-dark */
+.table-header-custom {
+    background-color: #673AB7 !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+    .table-header-custom th {
+        background-color: #673AB7 !important;
+        color: white !important;
+        border-color: #7c4dff !important;
+        padding: 0.75rem;
+    }
